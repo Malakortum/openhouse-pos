@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ระบบร้าน Open House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#f6f1e8; --card:#fff; --ink:#2a221d; --muted:#7b6f64; --line:#e7ddcf; --chip:#f2eadd;
+  --accent:#c4552c; --accent-soft:#fbe9e1; --ok:#2e7d58; --ok-soft:#e3f2ea; --warn:#a8641a; --warn-soft:#fdf0dc;
+  --danger:#b3262d; --dark:#2a221d; --radius:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:16px}
+body{display:flex;flex-direction:column;height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
+h1,h2,h3{margin:0}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--dark);color:#fff;flex:none}
+.brand{font-weight:700;font-size:17px;white-space:nowrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1}
+.tabs a{color:#e8dccd;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.tabs a.active{background:var(--accent);color:#fff}
+.conn{display:flex;align-items:center;gap:6px;font-size:13px;color:#d9cdbd;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#999}
+.conn[data-s="ok"] .dot{background:#4cc38a}
+.conn[data-s="local"] .dot{background:#f0b54a}
+.conn[data-s="slow"] .dot,.conn[data-s="error"] .dot,.conn[data-s="offline"] .dot,.conn[data-s="loggedout"] .dot{background:#ef5a5a}
+.conn[data-s="syncing"] .dot{background:#f0b54a;animation:blink 1s infinite}
+.login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:70}
+.login[hidden]{display:none}
+.input{font:inherit;font-size:20px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--line);width:100%;user-select:text;-webkit-user-select:text}
+.input:focus{outline:none;border-color:var(--accent)}
+.conn[data-s="loading"] .dot{background:#bbb;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+main{flex:1;min-height:0;position:relative}
+
+/* generic */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:12px;font-weight:600;background:var(--chip)}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line)}
+.btn.big{padding:16px 20px;font-size:18px;width:100%}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:active:not(:disabled){transform:scale(.98)}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--chip);font-size:13px;color:var(--muted);margin:2px 4px 2px 0}
+.chip.hl{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.muted{color:var(--muted)}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 20px;font-size:18px}
+
+/* home */
+.home{height:100%;overflow:auto;padding:28px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.home h2{font-size:22px}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;width:100%;max-width:900px}
+.role{display:block;background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:24px;text-decoration:none;color:inherit}
+.role .ic{font-size:40px}
+.role b{display:block;font-size:20px;margin-top:8px}
+.role span{color:var(--muted);font-size:14px}
+
+/* cashier */
+.pos{display:grid;grid-template-columns:1fr 390px;height:100%}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px;padding:16px;overflow:auto;align-content:start}
+.mcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px 14px;text-align:center;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mcard:active{transform:scale(.97);border-color:var(--accent)}
+.mcard .em{font-size:44px;line-height:1.1}
+.mcard .nm{font-weight:600;font-size:17px}
+.mcard .pr{color:var(--accent);font-weight:700}
+.mcard .badge{font-size:12px;color:var(--muted)}
+.cart{background:var(--card);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.cart-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1.5px solid var(--line)}
+.cart-head h2{font-size:18px}
+.cart-items{flex:1;overflow:auto;padding:8px 16px}
+.line{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.line .nm{font-weight:600}
+.line .lp{text-align:right;font-weight:600}
+.stepper{display:flex;align-items:center;gap:4px}
+.stepper button{width:38px;height:38px;border-radius:10px;background:var(--chip);font-size:20px;font-weight:700}
+.stepper span{min-width:28px;text-align:center;font-weight:700}
+.cart-foot{border-top:1.5px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.total{display:flex;justify-content:space-between;align-items:baseline;font-size:18px}
+.total b{font-size:30px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{padding:12px;border-radius:12px;border:1.5px solid var(--line);font-weight:600}
+.seg button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.cashbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cashbtns button{padding:10px 4px;border-radius:10px;background:var(--chip);font-weight:600}
+.cashbtns button.on{background:var(--ink);color:#fff}
+.change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok);font-weight:600}
+.change.bad{background:#fde4e4;color:var(--danger)}
+
+/* recent list */
+.olist{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+.orow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px}
+.orow .q{font-weight:700;font-size:20px;min-width:52px}
+.orow.cx{opacity:.5}
+.orow.cx .its{text-decoration:line-through}
+.st{font-size:12px;padding:2px 8px;border-radius:999px;font-weight:600}
+.st.pending{background:var(--warn-soft);color:var(--warn)}
+.st.done{background:var(--ok-soft);color:var(--ok)}
+.st.picked{background:var(--chip);color:var(--muted)}
+.st.cancelled{background:#fde4e4;color:var(--danger)}
+
+/* kitchen */
+.kbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:10px;flex-wrap:wrap}
+.kbar h2{font-size:20px}
+.kwrap{height:100%;display:flex;flex-direction:column}
+.kgrid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:0 16px 16px;align-content:start}
+.kcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px}
+.kcard header{display:flex;justify-content:space-between;align-items:baseline}
+.kcard .qno{font-size:34px;font-weight:700;color:var(--accent)}
+.kcard ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;flex:1}
+.kcard li{font-size:19px;line-height:1.4}
+.kcard li b{color:var(--accent)}
+.kcard.new{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.92);opacity:.3}100%{transform:none;opacity:1}}
+
+/* queue display */
+body[data-view="queue"] .topbar{display:none}
+.qwrap{height:100%;display:grid;grid-template-columns:1fr 1.7fr;background:var(--dark);color:#fff}
+.qcol{padding:24px;overflow:hidden;display:flex;flex-direction:column;gap:16px}
+.qcol h2{font-size:26px;font-weight:600;color:#d9cdbd}
+.qcol.ready{background:#3a2e27}
+.qcol.ready h2{color:#fff}
+.qtiles{display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start}
+.qt{border-radius:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.prep .qt{background:#41362f;color:#e8dccd;font-size:30px;width:92px;height:72px}
+.ready .qt{background:var(--accent);color:#fff;font-size:56px;width:150px;height:110px}
+.ready .qt.first{background:#fff;color:var(--accent);animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 10px rgba(255,255,255,.15)}}
+.qhint{margin-top:auto;font-size:13px;color:#a8998a}
+.qback{position:fixed;left:10px;bottom:10px;opacity:.25;background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-size:13px;text-decoration:none}
+
+/* sales */
+.sales{height:100%;overflow:auto;padding:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px}
+.stat .lb{color:var(--muted);font-size:14px}
+.stat .v{font-size:28px;font-weight:700;margin-top:4px}
+.stat.hero{grid-column:1/-1;background:var(--dark);color:#fff;border:0}
+.stat.hero .lb{color:#d9cdbd}
+.stat.hero .v{font-size:52px}
+.tbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden}
+.tbl th,.tbl td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
+.tbl th{background:var(--chip);font-weight:600;font-size:13px;color:var(--muted)}
+.tbl tr.cx td{opacity:.45;text-decoration:line-through}
+.num{text-align:right!important;font-variant-numeric:tabular-nums}
+
+/* modal + toast */
+.overlay{position:fixed;inset:0;background:rgba(30,22,18,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.overlay.show{display:flex}
+.sheet{background:var(--card);border-radius:20px;padding:22px;width:100%;max-width:520px;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px}
+.sheet h3{font-size:20px}
+.optgroup .lb{font-weight:600;margin-bottom:8px}
+.optchips{display:flex;flex-wrap:wrap;gap:8px}
+.optchips button{padding:12px 18px;border-radius:12px;border:1.5px solid var(--line);font-weight:600;font-size:17px}
+.optchips button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.bigq{text-align:center}
+.bigq .n{font-size:96px;font-weight:700;color:var(--accent);line-height:1}
+#qr{display:flex;justify-content:center;padding:8px}
+#qr img,#qr canvas{border-radius:8px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--dark);color:#fff;padding:12px 16px;border-radius:14px;display:flex;align-items:center;gap:14px;transition:transform .25s;z-index:60;max-width:92vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast button{color:#ffb38f;font-weight:700}
+.demo{background:var(--warn-soft);color:var(--warn);text-align:center;padding:6px;font-size:13px;flex:none}
+
+@media (max-width:760px){
+  .pos{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .cart{border-left:0;border-top:1.5px solid var(--line);max-height:58vh}
+  .menu-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .qwrap{grid-template-columns:1fr}
+  .brand{display:none}
+}
+</style>
+</head>
+<body data-view="home">
+<header class="topbar">
+  <div class="brand" id="brand"></div>
+  <nav class="tabs">
+    <a href="#cashier">แคชเชียร์</a>
+    <a href="#kitchen">ครัว</a>
+    <a href="#queue">จอเรียกคิว</a>
+    <a href="#sales">ยอดขาย</a>
+  </nav>
+  <div class="conn" id="conn" data-s="loading"><span class="dot"></span><span id="connText">กำลังเชื่อมต่อ…</span></div>
+</header>
+<div class="demo" id="demo" hidden>โหมดทดลอง: ยังไม่ได้ใส่ firebaseConfig ข้อมูลอยู่ในเครื่องนี้เท่านั้น</div>
+<div class="login" id="login" hidden>
+  <form class="sheet" id="loginForm" autocomplete="off">
+    <div style="font-size:44px;text-align:center">🔐</div>
+    <h3 style="text-align:center">เข้าสู่ระบบร้าน</h3>
+    <p class="muted" style="margin:0;text-align:center">ใส่รหัสผ่านร้านครั้งเดียว เครื่องนี้จะจำไว้</p>
+    <input id="pw" type="password" placeholder="รหัสผ่านร้าน" class="input">
+    <div id="loginErr" style="color:var(--danger);min-height:1.2em;text-align:center"></div>
+    <button class="btn primary big" id="loginBtn" type="submit">เข้าสู่ระบบ</button>
+  </form>
+</div>
+<main id="main"></main>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastBtn" hidden></button></div>
+
+<script type="module">
+/* ================== ตั้งค่า Firebase (แก้ตรงนี้) ==================
+   1) วาง firebaseConfig ที่ได้จาก Firebase Console แทน null
+   2) SHOP_EMAIL = อีเมลบัญชีร้านที่สร้างใน Authentication (ต้องตรงกับใน firestore.rules)
+   ถ้ายังเป็น null ระบบจะทำงานแบบ "โหมดทดลอง" ในเครื่องเดียว */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCFYtjsyb2bPZa97nZWF3-Hz6eG4EvyIq4",
+  authDomain: "malakortumproject.firebaseapp.com",
+  projectId: "malakortumproject",
+  storageBucket: "malakortumproject.firebasestorage.app",
+  messagingSenderId: "406162342492",
+  appId: "1:406162342492:web:fc8d424e33123f971e1c99",
+  measurementId: "G-2RZ8956034"
+};
+const SHOP_EMAIL = "shop@openhouse.app";
+const FIREBASE_VER = "10.12.2";
+
+/* ================== ตั้งค่าร้าน (แก้ตรงนี้) ================== */
+const SHOP = {
+  name: "ร้านขนม Open House",
+  promptpay: ""   // ใส่เบอร์พร้อมเพย์ เช่น "0812345678" แล้วระบบจะสร้าง QR พร้อมยอดเงินให้อัตโนมัติ
+};
+// ชุดตัวเลือก — ตัวแรกของแต่ละชุดคือค่าเริ่มต้น
+const OPTION_SETS = {
+  sweet: { label: "ความหวาน", choices: ["หวานปกติ", "หวานน้อย", "ไม่หวาน"] }
+};
+// เมนู — ใส่ options: ["sweet"] ให้เมนูที่เลือกความหวานได้
+const MENU = [
+  { id: "thaitea", name: "ชาไทย",       price: 35, emoji: "🧋", options: ["sweet"] },
+  { id: "cocoa",   name: "โกโก้",        price: 35, emoji: "🍫", options: ["sweet"] },
+  { id: "lemon",   name: "น้ำมะนาว",     price: 30, emoji: "🍋", options: ["sweet"] },
+  { id: "brownie", name: "บราวนี่",      price: 25, emoji: "🟫", options: [] },
+  { id: "cookie",  name: "คุกกี้",       price: 20, emoji: "🍪", options: [] },
+  { id: "toast",   name: "ปังเนยนม",     price: 30, emoji: "🍞", options: [] }
+];
+/* ============================================================ */
+
+const READY_SHOW_MIN = 15;   // เลขคิว "พร้อมรับ" ค้างบนจอเรียกคิวกี่นาที
+const CASH_NOTES = [20, 50, 100, 500, 1000];
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const baht = n => "฿" + (Number(n) || 0).toLocaleString("th-TH");
+const dayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
+const hhmm = t => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "";
+const thaiDate = d => new Date(d + "T12:00:00+07:00").toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
+const DEFAULT_OPTS = new Set(Object.values(OPTION_SETS).map(s => s.choices[0]));
+const PAY_LABEL = { cash: "เงินสด", promptpay: "พร้อมเพย์" };
+const STATUS_LABEL = { pending: "กำลังทำ", done: "พร้อมรับ", picked: "รับแล้ว", cancelled: "ยกเลิก" };
+
+/* ---------- state ---------- */
+let store = null, mode = "loading", ready = false;
+let orders = [], curDay = dayKey(), unsub = null, loadTimer = null;
+let cart = [], payment = "cash", received = null;
+let shownView = null, modalKind = null, optState = null, confirmCb = null;
+let soundOn = false, audioCtx = null, knownPending = null;
+
+/* ---------- storage backends ---------- */
+function firebaseStore(F, db) {
+  const col = F.collection(db, "orders");
+  return {
+    watch(day, next, err) {
+      return F.onSnapshot(F.query(col, F.where("day", "==", day)), { includeMetadataChanges: true },
+        s => next(s.docs.map(d => ({ ...(d.data() || {}), id: d.id })), s.metadata), err);
+    },
+    add(o) { return F.setDoc(F.doc(col), o); },
+    update(id, patch) { return F.updateDoc(F.doc(col, id), patch); }
+  };
+}
+function localStore() {
+  const KEY = "openhouse-orders";
+  let list = [];
+  const subs = new Set();
+  const load = () => { try { list = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { } };
+  const emit = () => subs.forEach(f => f());
+  let bc = null;
+  try { bc = new BroadcastChannel("openhouse"); bc.onmessage = () => { load(); emit(); }; } catch (e) { }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { } try { bc && bc.postMessage(1); } catch (e) { } emit(); };
+  load();
+  return {
+    watch(day, next) { const f = () => next(list.filter(o => o.day === day).map(o => ({ ...o })), { fromCache: false }); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); },
+    add(o) { list.push({ ...o, id: "L" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }); save(); return Promise.resolve(); },
+    update(id, patch) { const o = list.find(x => x.id === id); if (o) Object.assign(o, patch); save(); return Promise.resolve(); }
+  };
+}
+
+let auth = null, FA = null;
+async function initStore() {
+  if (!FIREBASE_CONFIG) { store = localStore(); mode = "local"; $("#demo").hidden = false; subscribe(); return; }
+  try {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VER}/`;
+    const [A, F, Au] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js"), import(base + "firebase-auth.js")]);
+    const app = A.initializeApp(FIREBASE_CONFIG);
+    let db;
+    try { db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); }
+    catch (e) { db = F.getFirestore(app); }
+    auth = Au.getAuth(app); FA = Au;
+    store = firebaseStore(F, db); mode = "live";
+    if (shownView === "home") { shownView = null; render(); }
+    Au.onAuthStateChanged(auth, u => {
+      if (u) { $("#login").hidden = true; subscribe(); }
+      else { if (unsub) { unsub(); unsub = null; } orders = []; ready = false; setConn("loggedout"); $("#login").hidden = false; setTimeout(() => $("#pw").focus(), 50); }
+    });
+  } catch (e) {
+    setConn("error"); toast("⚠️ โหลด Firebase ไม่ได้ ตรวจอินเทอร์เน็ตหรือ firebaseConfig");
+  }
+}
+async function doLogin(ev) {
+  ev.preventDefault();
+  const pw = $("#pw").value, btn = $("#loginBtn");
+  if (!pw || !auth) return;
+  btn.disabled = true; $("#loginErr").textContent = "";
+  try { await FA.signInWithEmailAndPassword(auth, SHOP_EMAIL, pw); $("#pw").value = ""; }
+  catch (e) { $("#loginErr").textContent = e && e.code === "auth/network-request-failed" ? "ไม่มีอินเทอร์เน็ต" : "รหัสผ่านไม่ถูกต้อง"; }
+  btn.disabled = false;
+}
+$("#loginForm").addEventListener("submit", doLogin);
+function logout() { if (auth && FA) FA.signOut(auth); }
+
+function setConn(s) {
+  const t = { ok: "ออนไลน์ · ซิงก์ทุกเครื่อง", local: "โหมดทดลอง", loading: "กำลังเชื่อมต่อ…", slow: "เชื่อมต่อช้า ข้อมูลอาจไม่ล่าสุด",
+    error: "เชื่อมต่อไม่ได้", offline: "ออฟไลน์ · ออเดอร์จะส่งเมื่อเน็ตกลับมา", syncing: "กำลังส่งข้อมูล…", loggedout: "ยังไม่ได้เข้าสู่ระบบ" }[s];
+  $("#conn").dataset.s = s; $("#connText").textContent = t;
+}
+
+function subscribe() {
+  if (unsub) unsub();
+  curDay = dayKey();
+  setConn("loading");
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => setConn("slow"), 10000);
+  unsub = store.watch(curDay, (list, meta) => {
+    ready = true;
+    if (mode === "local") { clearTimeout(loadTimer); setConn("local"); }
+    else if (!meta.fromCache) { clearTimeout(loadTimer); setConn(meta.hasPendingWrites ? "syncing" : "ok"); }
+    else if (!navigator.onLine) { clearTimeout(loadTimer); setConn("offline"); }
+    orders = list.filter(o => o && typeof o === "object").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    onOrders();
+  }, e => { clearTimeout(loadTimer); setConn("error"); if (e && e.code === "permission-denied") toast("⚠️ ไม่มีสิทธิ์อ่านข้อมูล — ตรวจ firestore.rules และ SHOP_EMAIL"); });
+}
+setInterval(() => { if (unsub && dayKey() !== curDay) subscribe(); }, 60000);
+window.addEventListener("offline", () => { if (mode === "live" && unsub) setConn("offline"); });
+
+function onOrders() {
+  const pend = orders.filter(o => o.status === "pending").map(o => o.id);
+  let fresh = [];
+  if (knownPending) fresh = pend.filter(id => !knownPending.has(id));
+  knownPending = new Set(pend);
+  if (fresh.length && soundOn && shownView === "kitchen") beep();
+  update(fresh);
+}
+
+/* ---------- views ---------- */
+const SHELLS = {
+  home: () => `
+    <div class="home">
+      <h2>เครื่องนี้ใช้เป็น…</h2>
+      <div class="roles">
+        <a class="role" href="#cashier"><div class="ic">🧾</div><b>แคชเชียร์</b><span>รับออเดอร์ + รับเงิน</span></a>
+        <a class="role" href="#kitchen"><div class="ic">👩‍🍳</div><b>ครัว</b><span>ดูออเดอร์ที่ต้องทำ กดเสร็จ</span></a>
+        <a class="role" href="#queue"><div class="ic">📺</div><b>จอเรียกคิว</b><span>หันให้ลูกค้าดูเลขคิว</span></a>
+        <a class="role" href="#sales"><div class="ic">📈</div><b>ยอดขาย</b><span>ยอดรวมวันนี้แบบเรียลไทม์</span></a>
+      </div>
+      <p class="muted" style="text-align:center;max-width:560px">เปิดเว็บนี้บนทุกเครื่อง ล็อกอินด้วยรหัสผ่านร้าน แล้วเลือกหน้าที่ของแต่ละเครื่อง ข้อมูลจะซิงก์กันเอง</p>
+      ${mode === "live" ? `<button class="btn ghost" data-act="logout">ออกจากระบบเครื่องนี้</button>` : ""}
+    </div>`,
+  cashier: () => `
+    <div class="pos">
+      <section class="menu-grid">${MENU.map(m => `
+        <button class="mcard" data-act="menu" data-id="${esc(m.id)}">
+          <span class="em">${esc(m.emoji || "🍽️")}</span>
+          <span class="nm">${esc(m.name)}</span>
+          <span class="pr">${baht(m.price)}</span>
+          ${m.options && m.options.length ? `<span class="badge">เลือก${m.options.map(k => OPTION_SETS[k]?.label || "").join(", ")}</span>` : ""}
+        </button>`).join("")}
+      </section>
+      <aside class="cart">
+        <div class="cart-head"><h2>ออเดอร์ใหม่</h2><button class="btn ghost" data-act="recent">ออเดอร์วันนี้ <span id="recentCount"></span></button></div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-foot" id="cartFoot"></div>
+      </aside>
+    </div>`,
+  kitchen: () => `
+    <div class="kwrap">
+      <div class="kbar"><h2>ออเดอร์ที่ต้องทำ (<span id="kCount">0</span>)</h2>
+        <button class="btn ghost" data-act="sound" id="soundBtn">🔔 เปิดเสียงแจ้งเตือน</button></div>
+      <div class="kgrid" id="kgrid"></div>
+    </div>`,
+  queue: () => `
+    <div class="qwrap">
+      <section class="qcol prep"><h2>กำลังเตรียม</h2><div class="qtiles" id="qPrep"></div></section>
+      <section class="qcol ready"><h2>พร้อมรับแล้ว 🎉</h2><div class="qtiles" id="qReady"></div>
+        <div class="qhint">พนักงาน: แตะเลขคิวเมื่อลูกค้ารับของแล้ว</div></section>
+    </div>
+    <a class="qback" href="#">☰ เมนู</a>`,
+  sales: () => `<div class="sales" id="salesBody"></div>`
+};
+
+const UPDATERS = {
+  cashier() {
+    const c = $("#recentCount"); if (c) c.textContent = orders.length ? `(${orders.length})` : "";
+    renderCart();
+    if (modalKind === "recent") renderRecent();
+  },
+  kitchen(fresh = []) {
+    const pend = orders.filter(o => o.status === "pending");
+    $("#kCount").textContent = pend.length;
+    $("#kgrid").innerHTML = pend.length ? pend.map(o => `
+      <article class="kcard ${fresh.includes(o.id) ? "new" : ""}">
+        <header><span class="qno">#${esc(o.queueNo)}</span><span class="muted">${hhmm(o.createdAt)}</span></header>
+        <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}</li>`).join("")}</ul>
+        <button class="btn ok big" data-act="done" data-id="${esc(o.id)}">เสร็จแล้ว ✓</button>
+      </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง 🎉</div>`;
+    $("#soundBtn").textContent = soundOn ? "🔔 เสียงเปิดอยู่" : "🔕 แตะเพื่อเปิดเสียงแจ้งเตือน";
+  },
+  queue() {
+    const now = Date.now();
+    const prep = orders.filter(o => o.status === "pending");
+    const rdy = orders.filter(o => o.status === "done" && now - (o.doneAt || 0) < READY_SHOW_MIN * 60000)
+      .sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    $("#qPrep").innerHTML = prep.map(o => `<div class="qt">${esc(o.queueNo)}</div>`).join("") || `<span style="color:#a8998a">—</span>`;
+    $("#qReady").innerHTML = rdy.map((o, i) => `<button class="qt ${i === 0 ? "first" : ""}" data-act="pick" data-id="${esc(o.id)}">${esc(o.queueNo)}</button>`).join("") || `<span style="color:#a8998a;font-size:20px">—</span>`;
+  },
+  sales() {
+    const ok = orders.filter(o => o.status !== "cancelled");
+    const sum = (arr) => arr.reduce((s, o) => s + (Number(o.total) || 0), 0);
+    const cash = sum(ok.filter(o => o.payment === "cash")), pp = sum(ok.filter(o => o.payment === "promptpay"));
+    const qty = ok.reduce((s, o) => s + (o.items || []).reduce((a, it) => a + (Number(it.qty) || 0), 0), 0);
+    const cx = orders.length - ok.length;
+    $("#salesBody").innerHTML = `
+      <p class="muted" style="margin:0 0 12px">${esc(thaiDate(curDay))}</p>
+      <div class="stats">
+        <div class="stat hero"><div class="lb">ยอดขายรวมวันนี้</div><div class="v">${baht(sum(ok))}</div></div>
+        <div class="stat"><div class="lb">💵 เงินสด (ควรมีในลิ้นชัก)</div><div class="v">${baht(cash)}</div></div>
+        <div class="stat"><div class="lb">📱 พร้อมเพย์</div><div class="v">${baht(pp)}</div></div>
+        <div class="stat"><div class="lb">จำนวนออเดอร์</div><div class="v">${ok.length}</div></div>
+        <div class="stat"><div class="lb">ขายไปทั้งหมด (ชิ้น/แก้ว)</div><div class="v">${qty}</div></div>
+        <div class="stat"><div class="lb">ยกเลิก</div><div class="v">${cx}</div></div>
+      </div>
+      ${orders.length ? `<table class="tbl"><thead><tr><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead><tbody>
+        ${[...orders].reverse().map(o => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${hhmm(o.createdAt)}</td><td>#${esc(o.queueNo)}</td>
+        <td>${itemsText(o)}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td>
+        <td><span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></td></tr>`).join("")}
+      </tbody></table>` : `<div class="empty">ยังไม่มีออเดอร์วันนี้</div>`}`;
+  }
+};
+
+function itemsText(o) {
+  return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}`).join(", ");
+}
+
+function currentView() { const h = location.hash.slice(1); return SHELLS[h] ? h : "home"; }
+function render() {
+  const v = currentView();
+  document.body.dataset.view = v;
+  $$(".tabs a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + v));
+  if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); }
+  update();
+}
+function update(fresh) { const f = UPDATERS[shownView]; if (f) f(fresh); }
+window.addEventListener("hashchange", render);
+setInterval(() => { if (shownView === "queue") update(); }, 30000);
+
+/* ---------- cart ---------- */
+const cartTotal = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
+function addToCart(item, opts, qty) {
+  const key = item.id + "|" + opts.join(",");
+  const ex = cart.find(l => l.key === key);
+  if (ex) ex.qty += qty; else cart.push({ key, menuId: item.id, name: item.name, price: item.price, opts, qty });
+  received = null; update();
+}
+function tapMenu(id) {
+  const item = MENU.find(m => m.id === id); if (!item) return;
+  if (!item.options || !item.options.length) return addToCart(item, [], 1);
+  optState = { item, sel: Object.fromEntries(item.options.map(k => [k, OPTION_SETS[k].choices[0]])), qty: 1 };
+  openModal("opt", renderOpt());
+}
+function renderOpt() {
+  const { item, sel, qty } = optState;
+  return `<h3>${esc(item.emoji || "")} ${esc(item.name)} · ${baht(item.price)}</h3>
+    ${item.options.map(k => `<div class="optgroup"><div class="lb">${esc(OPTION_SETS[k].label)}</div><div class="optchips">
+      ${OPTION_SETS[k].choices.map(c => `<button class="${sel[k] === c ? "on" : ""}" data-act="opt" data-set="${esc(k)}" data-val="${esc(c)}">${esc(c)}</button>`).join("")}
+    </div></div>`).join("")}
+    <div class="optgroup"><div class="lb">จำนวน</div><div class="stepper"><button data-act="optdec">−</button><span>${qty}</span><button data-act="optinc">+</button></div></div>
+    <div class="row"><button class="btn ghost" data-act="close">ยกเลิก</button><button class="btn primary" data-act="optadd">เพิ่ม · ${baht(item.price * qty)}</button></div>`;
+}
+function renderCart() {
+  const box = $("#cartItems"); if (!box) return;
+  box.innerHTML = cart.length ? cart.map(l => `
+    <div class="line">
+      <div><div class="nm">${esc(l.name)}</div>${l.opts.map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}</div>
+      <div class="lp">${baht(l.price * l.qty)}</div>
+      <div class="muted" style="font-size:14px">${baht(l.price)} / ชิ้น</div>
+      <div class="stepper"><button data-act="dec" data-id="${esc(l.key)}">−</button><span>${l.qty}</span><button data-act="inc" data-id="${esc(l.key)}">+</button></div>
+    </div>`).join("") : `<p class="muted" style="text-align:center;margin-top:40px">แตะเมนูทางซ้ายเพื่อเพิ่มรายการ</p>`;
+
+  const total = cartTotal();
+  const short = payment === "cash" && received != null && received < total;
+  const notes = CASH_NOTES.filter(n => n >= total || total === 0);
+  let confirmLabel = `ยืนยันออเดอร์ · ${baht(total)}`;
+  if (payment === "promptpay" && SHOP.promptpay) confirmLabel = `แสดง QR · ${baht(total)}`;
+  $("#cartFoot").innerHTML = `
+    <div class="total"><span>รวม</span><b>${baht(total)}</b></div>
+    <div class="seg">
+      <button class="${payment === "cash" ? "on" : ""}" data-act="pay" data-id="cash">💵 เงินสด</button>
+      <button class="${payment === "promptpay" ? "on" : ""}" data-act="pay" data-id="promptpay">📱 พร้อมเพย์</button>
+    </div>
+    ${payment === "cash" ? `
+      <div class="cashbtns"><button class="${received === total && total ? "on" : ""}" data-act="cash" data-id="exact">พอดี</button>
+        ${notes.slice(0, 5).map(n => `<button class="${received === n && received !== total ? "on" : ""}" data-act="cash" data-id="${n}">${baht(n)}</button>`).join("")}</div>
+      ${received != null && total ? `<div class="change ${short ? "bad" : ""}"><span>รับ ${baht(received)}</span><span>${short ? "เงินไม่พอ" : "ทอน " + baht(received - total)}</span></div>` : ""}`
+      : `<div class="muted" style="font-size:14px">${SHOP.promptpay ? "กดแล้วจะขึ้น QR พร้อมยอดเงินให้ลูกค้าสแกน" : "ให้ลูกค้าสแกน QR ร้าน แล้วตรวจสลิปก่อนกดยืนยัน"}</div>`}
+    <div class="row">
+      ${cart.length ? `<button class="btn ghost" style="flex:0 0 auto" data-act="clearcart">ล้าง</button>` : ""}
+      <button class="btn primary big" data-act="confirm" ${!cart.length || short || !ready ? "disabled" : ""}>${ready ? confirmLabel : "กำลังเชื่อมต่อ…"}</button>
+    </div>`;
+}
+function changeQty(key, d) {
+  const l = cart.find(x => x.key === key); if (!l) return;
+  l.qty += d; if (l.qty <= 0) cart = cart.filter(x => x !== l);
+  received = null; update();
+}
+function onConfirm() {
+  if (!cart.length || !ready) return;
+  if (payment === "promptpay" && SHOP.promptpay) return openQR();
+  placeOrder();
+}
+function placeOrder() {
+  const total = cartTotal();
+  const queueNo = orders.reduce((m, o) => Math.max(m, Number(o.queueNo) || 0), 0) + 1;
+  const order = {
+    day: curDay, queueNo, total, payment,
+    cashReceived: payment === "cash" ? received : null,
+    items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts })),
+    status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null
+  };
+  store.add(order).catch(e => toast("⚠️ บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
+  const ch = order.cashReceived != null ? ` · รับ ${baht(order.cashReceived)} ทอน ${baht(order.cashReceived - total)}` : "";
+  cart = []; received = null; payment = "cash";
+  openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า</div><div class="n">${queueNo}</div>
+    <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p></div>
+    <button class="btn primary big" data-act="close">ออเดอร์ถัดไป</button>`);
+  update();
+}
+
+/* ---------- PromptPay QR ---------- */
+function tlv(id, v) { return id + String(v.length).padStart(2, "0") + v; }
+function crc16(s) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < s.length; i++) {
+    crc ^= s.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+function promptpayPayload(target, amount) {
+  const t = String(target).replace(/\D/g, "");
+  let acct;
+  if (t.length >= 15) acct = tlv("03", t);
+  else if (t.length >= 13) acct = tlv("02", t);
+  else acct = tlv("01", ("0000000000000" + t.replace(/^0/, "66")).slice(-13));
+  const p = tlv("00", "01") + tlv("01", amount ? "12" : "11") + tlv("29", tlv("00", "A000000677010111") + acct)
+    + tlv("58", "TH") + tlv("53", "764") + (amount ? tlv("54", amount.toFixed(2)) : "") + "6304";
+  return p + crc16(p);
+}
+function openQR() {
+  const total = cartTotal();
+  openModal("qr", `<h3 style="text-align:center">สแกนจ่าย ${baht(total)}</h3><div id="qr"></div>
+    <p class="muted" style="text-align:center;margin:0">ตรวจสลิปของลูกค้าก่อนกดยืนยัน</p>
+    <div class="row"><button class="btn ghost" data-act="close">ย้อนกลับ</button><button class="btn ok" data-act="qrpaid">ได้รับเงินแล้ว ✓</button></div>`);
+  try { new QRCode($("#qr"), { text: promptpayPayload(SHOP.promptpay, total), width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M }); }
+  catch (e) { $("#qr").innerHTML = `<p class="muted">สร้าง QR ไม่ได้ ให้ลูกค้าสแกน QR ร้านแทน</p>`; }
+}
+
+/* ---------- recent / cancel ---------- */
+function openRecent() { openModal("recent", ""); renderRecent(); }
+function renderRecent() {
+  const list = [...orders].reverse();
+  $("#sheet").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h3>ออเดอร์วันนี้</h3><button class="btn ghost" data-act="close">ปิด</button></div>
+    <div class="olist">${list.length ? list.map(o => `
+      <div class="orow ${o.status === "cancelled" ? "cx" : ""}">
+        <div class="q">#${esc(o.queueNo)}</div>
+        <div><div class="its">${itemsText(o)}</div><div class="muted" style="font-size:13px">${hhmm(o.createdAt)} · ${baht(o.total)} · ${esc(PAY_LABEL[o.payment] || "")} <span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></div></div>
+        <div>${o.status !== "cancelled" ? `<button class="btn" style="color:var(--danger)" data-act="cancel" data-id="${esc(o.id)}">ยกเลิก</button>` : ""}</div>
+      </div>`).join("") : `<p class="muted">ยังไม่มีออเดอร์</p>`}</div>`;
+}
+function askCancel(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  confirmCb = () => store.update(id, { status: "cancelled", cancelledAt: Date.now() })
+    .then(() => toast(`ยกเลิกคิว #${o.queueNo} แล้ว` + (o.payment === "cash" ? ` — คืนเงินสด ${baht(o.total)}` : ` — คืนเงิน ${baht(o.total)}`)))
+    .catch(() => toast("⚠️ ยกเลิกไม่สำเร็จ ลองอีกครั้ง"));
+  openModal("confirm", `<h3>ยกเลิกคิว #${esc(o.queueNo)}?</h3><p style="margin:0">${itemsText(o)}<br><b>${baht(o.total)}</b> · ${esc(PAY_LABEL[o.payment] || "")}</p>
+    <p class="muted" style="margin:0">ยอดนี้จะถูกหักออกจากยอดขาย และหายจากจอครัว</p>
+    <div class="row"><button class="btn ghost" data-act="recent">ไม่ใช่</button><button class="btn danger" data-act="confirmyes">ยืนยันยกเลิก</button></div>`);
+}
+
+/* ---------- kitchen / queue actions ---------- */
+function markDone(id, btn) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  btn.disabled = true;
+  store.update(id, { status: "done", doneAt: Date.now() }).catch(() => { btn.disabled = false; toast("⚠️ บันทึกไม่สำเร็จ ลองอีกครั้ง"); });
+  toast(`คิว #${o.queueNo} เสร็จแล้ว`, "ย้อนกลับ", () => store.update(id, { status: "pending", doneAt: null }));
+}
+function markPicked(id) {
+  const o = orders.find(x => x.id === id); if (!o) return;
+  store.update(id, { status: "picked", pickedAt: Date.now() });
+  toast(`คิว #${o.queueNo} รับของแล้ว`, "ย้อนกลับ", () => store.update(id, { status: "done", pickedAt: null }));
+}
+function enableSound() {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); soundOn = true; beep(); }
+  catch (e) { toast("เครื่องนี้เปิดเสียงไม่ได้"); }
+  update();
+}
+function beep() {
+  if (!audioCtx) return;
+  const t0 = audioCtx.currentTime;
+  [0, 0.22].forEach((d, i) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = i ? 1175 : 880;
+    g.gain.setValueAtTime(0.0001, t0 + d); g.gain.exponentialRampToValueAtTime(0.35, t0 + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.3);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t0 + d); o.stop(t0 + d + 0.32);
+  });
+}
+
+/* ---------- modal / toast ---------- */
+function openModal(kind, html) { modalKind = kind; $("#sheet").innerHTML = html; $("#overlay").classList.add("show"); }
+function closeModal() { modalKind = null; optState = null; confirmCb = null; $("#overlay").classList.remove("show"); }
+$("#overlay").addEventListener("click", e => { if (e.target.id === "overlay") closeModal(); });
+let toastTimer = null;
+function toast(text, actLabel, act) {
+  $("#toastText").textContent = text;
+  const b = $("#toastBtn");
+  b.hidden = !actLabel; b.textContent = actLabel || "";
+  b.onclick = () => { $("#toast").classList.remove("show"); act && act(); };
+  $("#toast").classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").classList.remove("show"), actLabel ? 6000 : 4000);
+}
+
+/* ---------- click router ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
+  const id = t.dataset.id;
+  switch (t.dataset.act) {
+    case "menu": tapMenu(id); break;
+    case "inc": changeQty(id, 1); break;
+    case "dec": changeQty(id, -1); break;
+    case "pay": payment = id; received = null; update(); break;
+    case "cash": received = id === "exact" ? cartTotal() : Number(id); update(); break;
+    case "clearcart": cart = []; received = null; update(); break;
+    case "confirm": onConfirm(); break;
+    case "qrpaid": closeModal(); placeOrder(); break;
+    case "recent": openRecent(); break;
+    case "cancel": askCancel(id); break;
+    case "confirmyes": { const cb = confirmCb; closeModal(); cb && cb(); break; }
+    case "done": markDone(id, t); break;
+    case "pick": markPicked(id); break;
+    case "sound": enableSound(); break;
+    case "logout": logout(); break;
+    case "close": closeModal(); break;
+    case "opt": optState.sel[t.dataset.set] = t.dataset.val; $("#sheet").innerHTML = renderOpt(); break;
+    case "optinc": optState.qty++; $("#sheet").innerHTML = renderOpt(); break;
+    case "optdec": if (optState.qty > 1) optState.qty--; $("#sheet").innerHTML = renderOpt(); break;
+    case "optadd": { const { item, sel, qty } = optState; addToCart(item, item.options.map(k => sel[k]), qty); closeModal(); break; }
+  }
+});
+
+$("#brand").textContent = SHOP.name;
+render();
+initStore();
+</script>
+</body>
+</html>
