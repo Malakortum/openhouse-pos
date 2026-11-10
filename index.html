@@ -11,9 +11,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
-  --bg:#f6f1e8; --card:#fff; --ink:#2a221d; --muted:#7b6f64; --line:#e7ddcf; --chip:#f2eadd;
-  --accent:#c4552c; --accent-soft:#fbe9e1; --ok:#2e7d58; --ok-soft:#e3f2ea; --warn:#a8641a; --warn-soft:#fdf0dc;
-  --danger:#b3262d; --dark:#2a221d; --radius:16px;
+  --brown:#5d4037; --red:#8B0000; --mint:#A8E6CF;
+  --bg:#faf6f3; --card:#fff; --ink:#3e2723; --muted:#7d6a63; --line:#e9dfd9; --chip:#f3ebe6;
+  --accent:var(--red); --accent-soft:#f7e4e4; --ok:var(--mint); --ok-ink:#1f5544; --ok-soft:#e4f7ef; --warn:var(--red); --warn-soft:#f7e4e4;
+  --danger:#b3262d; --dark:var(--brown); --radius:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:16px}
@@ -25,11 +26,11 @@ h1,h2,h3{margin:0}
 .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--dark);color:#fff;flex:none}
 .brand{font-weight:700;font-size:17px;white-space:nowrap}
 .tabs{display:flex;gap:6px;overflow-x:auto;flex:1}
-.tabs a{color:#e8dccd;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.tabs a{color:#efe3dd;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
 .tabs a.active{background:var(--accent);color:#fff}
-.conn{display:flex;align-items:center;gap:6px;font-size:13px;color:#d9cdbd;white-space:nowrap}
+.conn{display:flex;align-items:center;gap:6px;font-size:13px;color:#efe3dd;white-space:nowrap}
 .dot{width:9px;height:9px;border-radius:50%;background:#999}
-.conn[data-s="ok"] .dot{background:#4cc38a}
+.conn[data-s="ok"] .dot{background:var(--mint)}
 .conn[data-s="local"] .dot{background:#f0b54a}
 .conn[data-s="slow"] .dot,.conn[data-s="error"] .dot,.conn[data-s="offline"] .dot,.conn[data-s="loggedout"] .dot{background:#ef5a5a}
 .conn[data-s="syncing"] .dot{background:#f0b54a;animation:blink 1s infinite}
@@ -44,7 +45,7 @@ main{flex:1;min-height:0;position:relative}
 /* generic */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:12px;font-weight:600;background:var(--chip)}
 .btn.primary{background:var(--accent);color:#fff}
-.btn.ok{background:var(--ok);color:#fff}
+.btn.ok{background:var(--mint);color:var(--ok-ink)}
 .btn.danger{background:var(--danger);color:#fff}
 .btn.ghost{background:transparent;border:1.5px solid var(--line)}
 .btn.big{padding:16px 20px;font-size:18px;width:100%}
@@ -57,20 +58,22 @@ main{flex:1;min-height:0;position:relative}
 
 /* home */
 .home{height:100%;overflow:auto;padding:28px;display:flex;flex-direction:column;align-items:center;gap:20px}
-.home h2{font-size:22px}
+.home h2{font-size:24px;color:var(--brown)}
+.tagline{color:var(--red);font-weight:600;font-size:18px;text-align:center}
 .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;width:100%;max-width:900px}
-.role{display:block;background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:24px;text-decoration:none;color:inherit}
+.role{display:block;background:var(--card);border:1.5px solid var(--line);border-left:6px solid var(--red);border-radius:var(--radius);padding:28px 24px;text-decoration:none;color:inherit}
+.role:active{border-color:var(--mint)}
 .role .ic{font-size:40px}
-.role b{display:block;font-size:20px;margin-top:8px}
+.role b{display:block;font-size:22px}
 .role span{color:var(--muted);font-size:14px}
 
 /* cashier */
 .pos{display:grid;grid-template-columns:1fr 390px;height:100%}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px;padding:16px;overflow:auto;align-content:start}
-.mcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px 14px;text-align:center;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px 14px;text-align:center;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .mcard:active{transform:scale(.97);border-color:var(--accent)}
 .mcard .em{font-size:44px;line-height:1.1}
-.mcard .nm{font-weight:600;font-size:17px}
+.mcard .nm{font-weight:600;font-size:19px}
 .mcard .pr{color:var(--accent);font-weight:700}
 .mcard .badge{font-size:12px;color:var(--muted)}
 .cart{background:var(--card);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -92,7 +95,7 @@ main{flex:1;min-height:0;position:relative}
 .cashbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .cashbtns button{padding:10px 4px;border-radius:10px;background:var(--chip);font-weight:600}
 .cashbtns button.on{background:var(--ink);color:#fff}
-.change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok);font-weight:600}
+.change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok-ink);font-weight:600}
 .change.bad{background:#fde4e4;color:var(--danger)}
 
 /* recent list */
@@ -103,7 +106,7 @@ main{flex:1;min-height:0;position:relative}
 .orow.cx .its{text-decoration:line-through}
 .st{font-size:12px;padding:2px 8px;border-radius:999px;font-weight:600}
 .st.pending{background:var(--warn-soft);color:var(--warn)}
-.st.done{background:var(--ok-soft);color:var(--ok)}
+.st.done{background:var(--ok-soft);color:var(--ok-ink)}
 .st.picked{background:var(--chip);color:var(--muted)}
 .st.cancelled{background:#fde4e4;color:var(--danger)}
 
@@ -125,16 +128,16 @@ main{flex:1;min-height:0;position:relative}
 body[data-view="queue"] .topbar{display:none}
 .qwrap{height:100%;display:grid;grid-template-columns:1fr 1.7fr;background:var(--dark);color:#fff}
 .qcol{padding:24px;overflow:hidden;display:flex;flex-direction:column;gap:16px}
-.qcol h2{font-size:26px;font-weight:600;color:#d9cdbd}
-.qcol.ready{background:#3a2e27}
+.qcol h2{font-size:26px;font-weight:600;color:#efe3dd}
+.qcol.ready{background:#4e342e}
 .qcol.ready h2{color:#fff}
 .qtiles{display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start}
 .qt{border-radius:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.prep .qt{background:#41362f;color:#e8dccd;font-size:30px;width:92px;height:72px}
+.prep .qt{background:#6d4c41;color:#efe3dd;font-size:30px;width:92px;height:72px}
 .ready .qt{background:var(--accent);color:#fff;font-size:56px;width:150px;height:110px}
-.ready .qt.first{background:#fff;color:var(--accent);animation:glow 1.6s ease-in-out infinite}
+.ready .qt.first{background:var(--mint);color:var(--brown);animation:glow 1.6s ease-in-out infinite}
 @keyframes glow{50%{box-shadow:0 0 0 10px rgba(255,255,255,.15)}}
-.qhint{margin-top:auto;font-size:13px;color:#a8998a}
+.qhint{margin-top:auto;font-size:13px;color:#bca79e}
 .qback{position:fixed;left:10px;bottom:10px;opacity:.25;background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-size:13px;text-decoration:none}
 
 /* sales */
@@ -144,7 +147,7 @@ body[data-view="queue"] .topbar{display:none}
 .stat .lb{color:var(--muted);font-size:14px}
 .stat .v{font-size:28px;font-weight:700;margin-top:4px}
 .stat.hero{grid-column:1/-1;background:var(--dark);color:#fff;border:0}
-.stat.hero .lb{color:#d9cdbd}
+.stat.hero .lb{color:#efe3dd}
 .stat.hero .v{font-size:52px}
 .tbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden}
 .tbl th,.tbl td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
@@ -169,7 +172,7 @@ body[data-view="queue"] .topbar{display:none}
 #qr img,#qr canvas{border-radius:8px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120px);background:var(--dark);color:#fff;padding:12px 16px;border-radius:14px;display:flex;align-items:center;gap:14px;transition:transform .25s;z-index:60;max-width:92vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast button{color:#ffb38f;font-weight:700}
+.toast button{color:var(--mint);font-weight:700}
 .demo{background:var(--warn-soft);color:var(--warn);text-align:center;padding:6px;font-size:13px;flex:none}
 
 @media (max-width:760px){
@@ -195,8 +198,7 @@ body[data-view="queue"] .topbar{display:none}
 <div class="demo" id="demo" hidden>โหมดทดลอง: ยังไม่ได้ใส่ firebaseConfig ข้อมูลอยู่ในเครื่องนี้เท่านั้น</div>
 <div class="login" id="login" hidden>
   <form class="sheet" id="loginForm" autocomplete="off">
-    <div style="font-size:44px;text-align:center">🔐</div>
-    <h3 style="text-align:center">เข้าสู่ระบบร้าน</h3>
+        <h3 style="text-align:center">เข้าสู่ระบบร้าน</h3>
     <p class="muted" style="margin:0;text-align:center">ใส่รหัสผ่านร้านครั้งเดียว เครื่องนี้จะจำไว้</p>
     <input id="pw" type="password" placeholder="รหัสผ่านร้าน" class="input">
     <div id="loginErr" style="color:var(--danger);min-height:1.2em;text-align:center"></div>
@@ -226,21 +228,21 @@ const FIREBASE_VER = "10.12.2";
 
 /* ================== ตั้งค่าร้าน (แก้ตรงนี้) ================== */
 const SHOP = {
-  name: "ร้านขนม Open House",
+  name: "ชื่อร้าน",
   promptpay: ""   // ใส่เบอร์พร้อมเพย์ เช่น "0812345678" แล้วระบบจะสร้าง QR พร้อมยอดเงินให้อัตโนมัติ
 };
 // ชุดตัวเลือก — ตัวแรกของแต่ละชุดคือค่าเริ่มต้น
 const OPTION_SETS = {
   sweet: { label: "ความหวาน", choices: ["หวานปกติ", "หวานน้อย", "ไม่หวาน"] }
 };
-// เมนู — ใส่ options: ["sweet"] ให้เมนูที่เลือกความหวานได้
+// เมนู — ใส่ options: ["sweet"] ให้เมนูที่เลือกความหวานได้ (id ภาษาอังกฤษ ห้ามซ้ำ)
 const MENU = [
-  { id: "thaitea", name: "ชาไทย",       price: 35, emoji: "🧋", options: ["sweet"] },
-  { id: "cocoa",   name: "โกโก้",        price: 35, emoji: "🍫", options: ["sweet"] },
-  { id: "lemon",   name: "น้ำมะนาว",     price: 30, emoji: "🍋", options: ["sweet"] },
-  { id: "brownie", name: "บราวนี่",      price: 25, emoji: "🟫", options: [] },
-  { id: "cookie",  name: "คุกกี้",       price: 20, emoji: "🍪", options: [] },
-  { id: "toast",   name: "ปังเนยนม",     price: 30, emoji: "🍞", options: [] }
+  { id: "thaitea", name: "ชาไทย",       price: 35, options: ["sweet"] },
+  { id: "cocoa",   name: "โกโก้",        price: 35, options: ["sweet"] },
+  { id: "lemon",   name: "น้ำมะนาว",     price: 30, options: ["sweet"] },
+  { id: "brownie", name: "บราวนี่",      price: 25, options: [] },
+  { id: "cookie",  name: "คุกกี้",       price: 20, options: [] },
+  { id: "toast",   name: "ปังเนยนม",     price: 30, options: [] }
 ];
 /* ============================================================ */
 
@@ -312,7 +314,7 @@ async function initStore() {
       else { if (unsub) { unsub(); unsub = null; } orders = []; ready = false; setConn("loggedout"); $("#login").hidden = false; setTimeout(() => $("#pw").focus(), 50); }
     });
   } catch (e) {
-    setConn("error"); toast("⚠️ โหลด Firebase ไม่ได้ ตรวจอินเทอร์เน็ตหรือ firebaseConfig");
+    setConn("error"); toast("โหลด Firebase ไม่ได้ ตรวจอินเทอร์เน็ตหรือ firebaseConfig");
   }
 }
 async function doLogin(ev) {
@@ -328,7 +330,7 @@ $("#loginForm").addEventListener("submit", doLogin);
 function logout() { if (auth && FA) FA.signOut(auth); }
 
 function setConn(s) {
-  const t = { ok: "ออนไลน์ · ซิงก์ทุกเครื่อง", local: "โหมดทดลอง", loading: "กำลังเชื่อมต่อ…", slow: "เชื่อมต่อช้า ข้อมูลอาจไม่ล่าสุด",
+  const t = { ok: "ออนไลน์นะค้าบบระบบร้านนี้", local: "โหมดทดลอง", loading: "กำลังเชื่อมต่อ…", slow: "เชื่อมต่อช้า ข้อมูลอาจไม่ล่าสุด",
     error: "เชื่อมต่อไม่ได้", offline: "ออฟไลน์ · ออเดอร์จะส่งเมื่อเน็ตกลับมา", syncing: "กำลังส่งข้อมูล…", loggedout: "ยังไม่ได้เข้าสู่ระบบ" }[s];
   $("#conn").dataset.s = s; $("#connText").textContent = t;
 }
@@ -346,7 +348,7 @@ function subscribe() {
     else if (!navigator.onLine) { clearTimeout(loadTimer); setConn("offline"); }
     orders = list.filter(o => o && typeof o === "object").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     onOrders();
-  }, e => { clearTimeout(loadTimer); setConn("error"); if (e && e.code === "permission-denied") toast("⚠️ ไม่มีสิทธิ์อ่านข้อมูล — ตรวจ firestore.rules และ SHOP_EMAIL"); });
+  }, e => { clearTimeout(loadTimer); setConn("error"); if (e && e.code === "permission-denied") toast("ไม่มีสิทธิ์อ่านข้อมูล — ตรวจ firestore.rules และ SHOP_EMAIL"); });
 }
 setInterval(() => { if (unsub && dayKey() !== curDay) subscribe(); }, 60000);
 window.addEventListener("offline", () => { if (mode === "live" && unsub) setConn("offline"); });
@@ -364,21 +366,20 @@ function onOrders() {
 const SHELLS = {
   home: () => `
     <div class="home">
-      <h2>เครื่องนี้ใช้เป็น…</h2>
+      <h2>เลือกโหมด</h2>
       <div class="roles">
-        <a class="role" href="#cashier"><div class="ic">🧾</div><b>แคชเชียร์</b><span>รับออเดอร์ + รับเงิน</span></a>
-        <a class="role" href="#kitchen"><div class="ic">👩‍🍳</div><b>ครัว</b><span>ดูออเดอร์ที่ต้องทำ กดเสร็จ</span></a>
-        <a class="role" href="#queue"><div class="ic">📺</div><b>จอเรียกคิว</b><span>หันให้ลูกค้าดูเลขคิว</span></a>
-        <a class="role" href="#sales"><div class="ic">📈</div><b>ยอดขาย</b><span>ยอดรวมวันนี้แบบเรียลไทม์</span></a>
+        <a class="role" href="#cashier"><b>แคชเชียร์</b></a>
+        <a class="role" href="#kitchen"><b>ครัว</b></a>
+        <a class="role" href="#queue"><b>จอเรียกคิว</b></a>
+        <a class="role" href="#sales"><b>ยอดขาย</b></a>
       </div>
-      <p class="muted" style="text-align:center;max-width:560px">เปิดเว็บนี้บนทุกเครื่อง ล็อกอินด้วยรหัสผ่านร้าน แล้วเลือกหน้าที่ของแต่ละเครื่อง ข้อมูลจะซิงก์กันเอง</p>
+      <p class="tagline">วัยรุ่น 67 ขายของครั้งแรก</p>
       ${mode === "live" ? `<button class="btn ghost" data-act="logout">ออกจากระบบเครื่องนี้</button>` : ""}
     </div>`,
   cashier: () => `
     <div class="pos">
       <section class="menu-grid">${MENU.map(m => `
         <button class="mcard" data-act="menu" data-id="${esc(m.id)}">
-          <span class="em">${esc(m.emoji || "🍽️")}</span>
           <span class="nm">${esc(m.name)}</span>
           <span class="pr">${baht(m.price)}</span>
           ${m.options && m.options.length ? `<span class="badge">เลือก${m.options.map(k => OPTION_SETS[k]?.label || "").join(", ")}</span>` : ""}
@@ -393,13 +394,13 @@ const SHELLS = {
   kitchen: () => `
     <div class="kwrap">
       <div class="kbar"><h2>ออเดอร์ที่ต้องทำ (<span id="kCount">0</span>)</h2>
-        <button class="btn ghost" data-act="sound" id="soundBtn">🔔 เปิดเสียงแจ้งเตือน</button></div>
+        <button class="btn ghost" data-act="sound" id="soundBtn">เปิดเสียงแจ้งเตือน</button></div>
       <div class="kgrid" id="kgrid"></div>
     </div>`,
   queue: () => `
     <div class="qwrap">
       <section class="qcol prep"><h2>กำลังเตรียม</h2><div class="qtiles" id="qPrep"></div></section>
-      <section class="qcol ready"><h2>พร้อมรับแล้ว 🎉</h2><div class="qtiles" id="qReady"></div>
+      <section class="qcol ready"><h2>พร้อมรับแล้ว</h2><div class="qtiles" id="qReady"></div>
         <div class="qhint">พนักงาน: แตะเลขคิวเมื่อลูกค้ารับของแล้ว</div></section>
     </div>
     <a class="qback" href="#">☰ เมนู</a>`,
@@ -420,8 +421,8 @@ const UPDATERS = {
         <header><span class="qno">#${esc(o.queueNo)}</span><span class="muted">${hhmm(o.createdAt)}</span></header>
         <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}</li>`).join("")}</ul>
         <button class="btn ok big" data-act="done" data-id="${esc(o.id)}">เสร็จแล้ว ✓</button>
-      </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง 🎉</div>`;
-    $("#soundBtn").textContent = soundOn ? "🔔 เสียงเปิดอยู่" : "🔕 แตะเพื่อเปิดเสียงแจ้งเตือน";
+      </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง</div>`;
+    $("#soundBtn").textContent = soundOn ? "เสียงเปิดอยู่" : "แตะเพื่อเปิดเสียงแจ้งเตือน";
   },
   queue() {
     const now = Date.now();
@@ -441,8 +442,8 @@ const UPDATERS = {
       <p class="muted" style="margin:0 0 12px">${esc(thaiDate(curDay))}</p>
       <div class="stats">
         <div class="stat hero"><div class="lb">ยอดขายรวมวันนี้</div><div class="v">${baht(sum(ok))}</div></div>
-        <div class="stat"><div class="lb">💵 เงินสด (ควรมีในลิ้นชัก)</div><div class="v">${baht(cash)}</div></div>
-        <div class="stat"><div class="lb">📱 พร้อมเพย์</div><div class="v">${baht(pp)}</div></div>
+        <div class="stat"><div class="lb">เงินสด (ควรมีในลิ้นชัก)</div><div class="v">${baht(cash)}</div></div>
+        <div class="stat"><div class="lb">พร้อมเพย์</div><div class="v">${baht(pp)}</div></div>
         <div class="stat"><div class="lb">จำนวนออเดอร์</div><div class="v">${ok.length}</div></div>
         <div class="stat"><div class="lb">ขายไปทั้งหมด (ชิ้น/แก้ว)</div><div class="v">${qty}</div></div>
         <div class="stat"><div class="lb">ยกเลิก</div><div class="v">${cx}</div></div>
@@ -487,7 +488,7 @@ function tapMenu(id) {
 }
 function renderOpt() {
   const { item, sel, qty } = optState;
-  return `<h3>${esc(item.emoji || "")} ${esc(item.name)} · ${baht(item.price)}</h3>
+  return `<h3>${esc(item.name)} · ${baht(item.price)}</h3>
     ${item.options.map(k => `<div class="optgroup"><div class="lb">${esc(OPTION_SETS[k].label)}</div><div class="optchips">
       ${OPTION_SETS[k].choices.map(c => `<button class="${sel[k] === c ? "on" : ""}" data-act="opt" data-set="${esc(k)}" data-val="${esc(c)}">${esc(c)}</button>`).join("")}
     </div></div>`).join("")}
@@ -512,8 +513,8 @@ function renderCart() {
   $("#cartFoot").innerHTML = `
     <div class="total"><span>รวม</span><b>${baht(total)}</b></div>
     <div class="seg">
-      <button class="${payment === "cash" ? "on" : ""}" data-act="pay" data-id="cash">💵 เงินสด</button>
-      <button class="${payment === "promptpay" ? "on" : ""}" data-act="pay" data-id="promptpay">📱 พร้อมเพย์</button>
+      <button class="${payment === "cash" ? "on" : ""}" data-act="pay" data-id="cash">เงินสด</button>
+      <button class="${payment === "promptpay" ? "on" : ""}" data-act="pay" data-id="promptpay">พร้อมเพย์</button>
     </div>
     ${payment === "cash" ? `
       <div class="cashbtns"><button class="${received === total && total ? "on" : ""}" data-act="cash" data-id="exact">พอดี</button>
@@ -544,7 +545,7 @@ function placeOrder() {
     items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts })),
     status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null
   };
-  store.add(order).catch(e => toast("⚠️ บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
+  store.add(order).catch(e => toast("บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
   const ch = order.cashReceived != null ? ` · รับ ${baht(order.cashReceived)} ทอน ${baht(order.cashReceived - total)}` : "";
   cart = []; received = null; payment = "cash";
   openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า</div><div class="n">${queueNo}</div>
@@ -598,7 +599,7 @@ function askCancel(id) {
   const o = orders.find(x => x.id === id); if (!o) return;
   confirmCb = () => store.update(id, { status: "cancelled", cancelledAt: Date.now() })
     .then(() => toast(`ยกเลิกคิว #${o.queueNo} แล้ว` + (o.payment === "cash" ? ` — คืนเงินสด ${baht(o.total)}` : ` — คืนเงิน ${baht(o.total)}`)))
-    .catch(() => toast("⚠️ ยกเลิกไม่สำเร็จ ลองอีกครั้ง"));
+    .catch(() => toast("ยกเลิกไม่สำเร็จ ลองอีกครั้ง"));
   openModal("confirm", `<h3>ยกเลิกคิว #${esc(o.queueNo)}?</h3><p style="margin:0">${itemsText(o)}<br><b>${baht(o.total)}</b> · ${esc(PAY_LABEL[o.payment] || "")}</p>
     <p class="muted" style="margin:0">ยอดนี้จะถูกหักออกจากยอดขาย และหายจากจอครัว</p>
     <div class="row"><button class="btn ghost" data-act="recent">ไม่ใช่</button><button class="btn danger" data-act="confirmyes">ยืนยันยกเลิก</button></div>`);
@@ -608,7 +609,7 @@ function askCancel(id) {
 function markDone(id, btn) {
   const o = orders.find(x => x.id === id); if (!o) return;
   btn.disabled = true;
-  store.update(id, { status: "done", doneAt: Date.now() }).catch(() => { btn.disabled = false; toast("⚠️ บันทึกไม่สำเร็จ ลองอีกครั้ง"); });
+  store.update(id, { status: "done", doneAt: Date.now() }).catch(() => { btn.disabled = false; toast("บันทึกไม่สำเร็จ ลองอีกครั้ง"); });
   toast(`คิว #${o.queueNo} เสร็จแล้ว`, "ย้อนกลับ", () => store.update(id, { status: "pending", doneAt: null }));
 }
 function markPicked(id) {
