@@ -97,6 +97,14 @@ main{flex:1;min-height:0;position:relative}
 .cashbtns button.on{background:var(--ink);color:#fff}
 .change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok-ink);font-weight:600}
 .change.bad{background:#fde4e4;color:var(--danger)}
+.kp-display{text-align:center;font-size:56px;font-weight:700;color:var(--ink);padding:8px 0 0;font-variant-numeric:tabular-nums}
+.kp-sub{text-align:center;font-weight:600;padding:8px;border-radius:10px;background:var(--chip);color:var(--muted)}
+.kp-sub.ok{background:var(--ok-soft);color:var(--ok-ink)}
+.kp-sub.bad{background:#fde4e4;color:var(--danger)}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kp button{height:64px;border-radius:14px;background:var(--chip);font-size:26px;font-weight:700}
+.kp button:active{background:var(--line)}
+.kp button.fn{font-size:18px;color:var(--red)}
 
 /* recent list */
 .olist{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
@@ -257,7 +265,7 @@ const dayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok"
 const hhmm = t => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "";
 const thaiDate = d => new Date(d + "T12:00:00+07:00").toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
 const DEFAULT_OPTS = new Set(Object.values(OPTION_SETS).map(s => s.choices[0]));
-const PAY_LABEL = { cash: "เงินสด", promptpay: "พร้อมเพย์" };
+const PAY_LABEL = { cash: "เงินสด", promptpay: "โอน" };
 const STATUS_LABEL = { pending: "กำลังทำ", done: "พร้อมรับ", picked: "รับแล้ว", cancelled: "ยกเลิก" };
 
 /* ---------- state ---------- */
@@ -443,7 +451,7 @@ const UPDATERS = {
       <div class="stats">
         <div class="stat hero"><div class="lb">ยอดขายรวมวันนี้</div><div class="v">${baht(sum(ok))}</div></div>
         <div class="stat"><div class="lb">เงินสด (ควรมีในลิ้นชัก)</div><div class="v">${baht(cash)}</div></div>
-        <div class="stat"><div class="lb">พร้อมเพย์</div><div class="v">${baht(pp)}</div></div>
+        <div class="stat"><div class="lb">โอน</div><div class="v">${baht(pp)}</div></div>
         <div class="stat"><div class="lb">จำนวนออเดอร์</div><div class="v">${ok.length}</div></div>
         <div class="stat"><div class="lb">ขายไปทั้งหมด (ชิ้น/แก้ว)</div><div class="v">${qty}</div></div>
         <div class="stat"><div class="lb">ยกเลิก</div><div class="v">${cx}</div></div>
@@ -508,17 +516,20 @@ function renderCart() {
   const total = cartTotal();
   const short = payment === "cash" && received != null && received < total;
   const notes = CASH_NOTES.filter(n => n >= total || total === 0);
+  const shownNotes = notes.slice(0, 4);
+  const customOn = received != null && received !== total && !shownNotes.includes(received);
   let confirmLabel = `ยืนยันออเดอร์ · ${baht(total)}`;
   if (payment === "promptpay" && SHOP.promptpay) confirmLabel = `แสดง QR · ${baht(total)}`;
   $("#cartFoot").innerHTML = `
     <div class="total"><span>รวม</span><b>${baht(total)}</b></div>
     <div class="seg">
       <button class="${payment === "cash" ? "on" : ""}" data-act="pay" data-id="cash">เงินสด</button>
-      <button class="${payment === "promptpay" ? "on" : ""}" data-act="pay" data-id="promptpay">พร้อมเพย์</button>
+      <button class="${payment === "promptpay" ? "on" : ""}" data-act="pay" data-id="promptpay">โอน</button>
     </div>
     ${payment === "cash" ? `
       <div class="cashbtns"><button class="${received === total && total ? "on" : ""}" data-act="cash" data-id="exact">พอดี</button>
-        ${notes.slice(0, 5).map(n => `<button class="${received === n && received !== total ? "on" : ""}" data-act="cash" data-id="${n}">${baht(n)}</button>`).join("")}</div>
+        ${shownNotes.map(n => `<button class="${received === n && received !== total ? "on" : ""}" data-act="cash" data-id="${n}">${baht(n)}</button>`).join("")}
+        <button class="${customOn ? "on" : ""}" data-act="custom" ${total ? "" : "disabled"}>${customOn ? baht(received) : "ระบุเอง"}</button></div>
       ${received != null && total ? `<div class="change ${short ? "bad" : ""}"><span>รับ ${baht(received)}</span><span>${short ? "เงินไม่พอ" : "ทอน " + baht(received - total)}</span></div>` : ""}`
       : `<div class="muted" style="font-size:14px">${SHOP.promptpay ? "กดแล้วจะขึ้น QR พร้อมยอดเงินให้ลูกค้าสแกน" : "ให้ลูกค้าสแกน QR ร้าน แล้วตรวจสลิปก่อนกดยืนยัน"}</div>`}
     <div class="row">
@@ -552,6 +563,42 @@ function placeOrder() {
     <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p></div>
     <button class="btn primary big" data-act="close">ออเดอร์ถัดไป</button>`);
   update();
+}
+
+/* ---------- แป้นกรอกเงินเอง ---------- */
+let kpVal = "";
+function openKeypad() {
+  if (!cartTotal()) return;
+  kpVal = "";
+  openModal("keypad", "");
+  renderKeypad();
+}
+function renderKeypad() {
+  const total = cartTotal(), v = Number(kpVal || 0);
+  const sub = !kpVal ? `<div class="kp-sub">ยอดที่ต้องจ่าย ${baht(total)}</div>`
+    : v < total ? `<div class="kp-sub bad">เงินไม่พอ ขาดอีก ${baht(total - v)}</div>`
+    : `<div class="kp-sub ok">ทอน ${baht(v - total)}</div>`;
+  $("#sheet").innerHTML = `<h3 style="text-align:center">รับเงินมาเท่าไหร่</h3>
+    <div class="kp-display">${baht(v)}</div>${sub}
+    <div class="kp">
+      ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-act="kp" data-id="${n}">${n}</button>`).join("")}
+      <button class="fn" data-act="kp" data-id="clr">ล้าง</button>
+      <button data-act="kp" data-id="0">0</button>
+      <button class="fn" data-act="kp" data-id="del">ลบ</button>
+    </div>
+    <div class="row"><button class="btn ghost" data-act="close">ยกเลิก</button>
+      <button class="btn primary" data-act="kpok" ${kpVal && v >= total ? "" : "disabled"}>ตกลง</button></div>`;
+}
+function keypadPress(k) {
+  if (k === "clr") kpVal = "";
+  else if (k === "del") kpVal = kpVal.slice(0, -1);
+  else if (kpVal.length < 5) kpVal = (kpVal + k).replace(/^0+/, "");
+  renderKeypad();
+}
+function keypadOk() {
+  const v = Number(kpVal || 0);
+  if (!kpVal || v < cartTotal()) return;
+  received = v; closeModal(); update();
 }
 
 /* ---------- PromptPay QR ---------- */
@@ -658,6 +705,9 @@ document.addEventListener("click", e => {
     case "pay": payment = id; received = null; update(); break;
     case "cash": received = id === "exact" ? cartTotal() : Number(id); update(); break;
     case "clearcart": cart = []; received = null; update(); break;
+    case "custom": openKeypad(); break;
+    case "kp": keypadPress(id); break;
+    case "kpok": keypadOk(); break;
     case "confirm": onConfirm(); break;
     case "qrpaid": closeModal(); placeOrder(); break;
     case "recent": openRecent(); break;
