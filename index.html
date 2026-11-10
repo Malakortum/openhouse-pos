@@ -150,6 +150,12 @@ body[data-view="queue"] .topbar{display:none}
 
 /* sales */
 .sales{height:100%;overflow:auto;padding:20px}
+.daynav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.daynav .arrow{width:46px;height:46px;border-radius:12px;background:var(--chip);font-size:24px;font-weight:700;color:var(--brown)}
+.daynav .arrow:disabled{opacity:.3}
+.daynav input{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);user-select:text;-webkit-user-select:text}
+.daynav .lbl{font-weight:600;color:var(--brown);margin-left:4px}
+.daynav .past{background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .stat{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px}
 .stat .lb{color:var(--muted);font-size:14px}
@@ -309,6 +315,7 @@ let orders = [], curDay = dayKey(), unsub = null, loadTimer = null;
 let cart = [], payment = "cash", received = null;
 let shownView = null, modalKind = null, optState = null, confirmCb = null;
 let soundOn = false, audioCtx = null, knownPending = null;
+let salesDay = null, salesOrders = [], salesUnsub = null, salesLoading = false;
 
 /* ---------- storage backends ---------- */
 function firebaseStore(F, db) {
@@ -475,28 +482,51 @@ const UPDATERS = {
     $("#qReady").innerHTML = rdy.map((o, i) => `<button class="qt ${i === 0 ? "first" : ""}" data-act="pick" data-id="${esc(o.id)}">${esc(o.queueNo)}</button>`).join("") || `<span style="color:#a8998a;font-size:20px">—</span>`;
   },
   sales() {
-    const ok = orders.filter(o => o.status !== "cancelled");
+    const day = salesDay || curDay, list = salesDay ? salesOrders : orders;
+    const ok = list.filter(o => o.status !== "cancelled");
     const sum = (arr) => arr.reduce((s, o) => s + (Number(o.total) || 0), 0);
     const cash = sum(ok.filter(o => o.payment === "cash")), pp = sum(ok.filter(o => o.payment === "promptpay"));
     const qty = ok.reduce((s, o) => s + (o.items || []).reduce((a, it) => a + (Number(it.qty) || 0), 0), 0);
-    const cx = orders.length - ok.length;
+    const cx = list.length - ok.length;
     $("#salesBody").innerHTML = `
-      <p class="muted" style="margin:0 0 12px">${esc(thaiDate(curDay))}</p>
+      <div class="daynav">
+        <button class="arrow" data-act="day" data-id="-1" aria-label="วันก่อนหน้า">‹</button>
+        <input type="date" id="salesDate" value="${esc(day)}" max="${esc(curDay)}">
+        <button class="arrow" data-act="day" data-id="1" aria-label="วันถัดไป" ${day >= curDay ? "disabled" : ""}>›</button>
+        ${salesDay ? `<button class="btn ghost" data-act="today">กลับไปวันนี้</button><span class="past">ข้อมูลย้อนหลัง</span>` : ""}
+        <span class="lbl">${esc(thaiDate(day))}</span>
+      </div>
       <div class="stats">
-        <div class="stat hero"><div class="lb">ยอดขายรวมวันนี้</div><div class="v">${baht(sum(ok))}</div></div>
+        <div class="stat hero"><div class="lb">${salesDay ? "ยอดขายรวมวันนั้น" : "ยอดขายรวมวันนี้"}</div><div class="v">${baht(sum(ok))}</div></div>
         <div class="stat"><div class="lb">เงินสด (ควรมีในลิ้นชัก)</div><div class="v">${baht(cash)}</div></div>
         <div class="stat"><div class="lb">โอน</div><div class="v">${baht(pp)}</div></div>
         <div class="stat"><div class="lb">จำนวนออเดอร์</div><div class="v">${ok.length}</div></div>
         <div class="stat"><div class="lb">ขายไปทั้งหมด (ชิ้น/แก้ว)</div><div class="v">${qty}</div></div>
         <div class="stat"><div class="lb">ยกเลิก</div><div class="v">${cx}</div></div>
       </div>
-      ${orders.length ? `<table class="tbl"><thead><tr><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead><tbody>
-        ${[...orders].reverse().map(o => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${hhmm(o.createdAt)}</td><td>#${esc(o.queueNo)}</td>
+      ${salesLoading ? `<div class="empty">กำลังโหลดข้อมูล…</div>` : list.length ? `<table class="tbl"><thead><tr><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead><tbody>
+        ${[...list].reverse().map(o => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${hhmm(o.createdAt)}</td><td>#${esc(o.queueNo)}</td>
         <td>${itemsText(o)}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td>
         <td><span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></td></tr>`).join("")}
-      </tbody></table>` : `<div class="empty">ยังไม่มีออเดอร์วันนี้</div>`}`;
+      </tbody></table>` : `<div class="empty">${salesDay ? "ไม่มีออเดอร์ในวันนั้น" : "ยังไม่มีออเดอร์วันนี้"}</div>`}`;
   }
 };
+
+/* ---------- ดูยอดขายย้อนหลัง ---------- */
+function shiftDay(d, n) {
+  const t = new Date(d + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + n);
+  return t.toISOString().slice(0, 10);
+}
+function setSalesDay(d) {
+  if (salesUnsub) { salesUnsub(); salesUnsub = null; }
+  if (!d || d >= curDay || !store) { salesDay = null; salesOrders = []; salesLoading = false; update(); return; }
+  salesDay = d; salesOrders = []; salesLoading = true; update();
+  salesUnsub = store.watch(d, list => {
+    salesOrders = list.filter(o => o && typeof o === "object").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    salesLoading = false; if (shownView === "sales") update();
+  }, () => { salesLoading = false; toast("โหลดข้อมูลวันนั้นไม่ได้"); if (shownView === "sales") update(); });
+}
+document.addEventListener("change", e => { if (e.target.id === "salesDate" && e.target.value) setSalesDay(e.target.value); });
 
 function itemsText(o) {
   return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}${(it.adds || []).map(a => ` +${esc(a.name)}${a.qty > 1 ? "×" + esc(a.qty) : ""}`).join("")}`).join(", ");
@@ -507,7 +537,7 @@ const VIEW_KEY = "openhouse-view";
 let curView = "home";
 try { const v = localStorage.getItem(VIEW_KEY); if (v && SHELLS[v]) curView = v; } catch (e) { }
 if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { } }
-function go(v) { if (!SHELLS[v]) v = "home"; curView = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) { } render(); }
+function go(v) { if (!SHELLS[v]) v = "home"; if (v !== "sales" && salesDay) setSalesDay(null); curView = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) { } render(); }
 function currentView() { return curView; }
 function render() {
   const v = currentView();
@@ -749,6 +779,8 @@ document.addEventListener("click", e => {
   const id = t.dataset.id;
   switch (t.dataset.act) {
     case "go": go(id); break;
+    case "day": setSalesDay(shiftDay(salesDay || curDay, Number(id))); break;
+    case "today": setSalesDay(null); break;
     case "menu": tapMenu(id); break;
     case "inc": changeQty(id, 1); break;
     case "dec": changeQty(id, -1); break;
