@@ -172,6 +172,17 @@ body[data-view="queue"] .topbar{display:none}
 .optchips{display:flex;flex-wrap:wrap;gap:8px}
 .optchips button{padding:12px 18px;border-radius:12px;border:1.5px solid var(--line);font-weight:600;font-size:17px}
 .optchips button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.sheet.wide{max-width:680px}
+.sheet.wide>.row:last-child{position:sticky;bottom:-22px;background:var(--card);padding:12px 0 4px;margin-bottom:-4px;border-top:1px solid var(--line)}
+.addons{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.addon{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;min-height:56px}
+.addon.on{border-color:var(--accent);background:var(--accent-soft)}
+.addon-main{flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:8px 12px;font-weight:600;font-size:16px;text-align:left}
+.addon-main small{color:var(--muted);font-weight:500;font-size:13px}
+.addon.on .addon-main{color:var(--accent)}
+.addon-n{display:flex;align-items:center;padding:0 4px;font-weight:700;font-size:18px;color:var(--accent)}
+.addon-minus{width:42px;font-size:22px;font-weight:700;color:var(--accent);border-left:1.5px solid var(--line)!important}
+.chip.add{background:var(--ok-soft);color:var(--ok-ink);font-weight:600}
 .row{display:flex;gap:10px}
 .row>*{flex:1}
 .bigq{text-align:center}
@@ -236,21 +247,43 @@ const FIREBASE_VER = "10.12.2";
 
 /* ================== ตั้งค่าร้าน (แก้ตรงนี้) ================== */
 const SHOP = {
-  name: "ชื่อร้าน",
+  name: "MA-LO-KÓ",
   promptpay: ""   // ใส่เบอร์พร้อมเพย์ เช่น "0812345678" แล้วระบบจะสร้าง QR พร้อมยอดเงินให้อัตโนมัติ
 };
-// ชุดตัวเลือก — ตัวแรกของแต่ละชุดคือค่าเริ่มต้น
+
+// ตัวเลือกแบบเลือก 1 อย่าง (ไม่คิดเงิน) — ตัวแรกของแต่ละชุดคือค่าเริ่มต้น
+// hideDefault: true = ถ้าเลือกค่าเริ่มต้น จะไม่ขึ้นตัวเด่นในจอครัว/ยอดขาย
 const OPTION_SETS = {
-  sweet: { label: "ความหวาน", choices: ["หวานปกติ", "หวานน้อย", "ไม่หวาน"] }
+  sweet:     { label: "ความหวาน", choices: ["หวานปกติ", "หวานน้อย", "ไม่หวาน"], hideDefault: true },
+  icecream:  { label: "ไอศกรีมที่มากับโทสต์", choices: ["ไอศกรีมช็อกโกแลต", "ไอศกรีมสตรอว์เบอร์รี", "ไอศกรีมวานิลลา"] },
+  freesauce: { label: "ซอสฟรี 1 รส", choices: ["ซอสนูเทลล่า", "ซอสบิสคอฟ", "ไม่เอาซอส"] }
 };
-// เมนู — ใส่ options: ["sweet"] ให้เมนูที่เลือกความหวานได้ (id ภาษาอังกฤษ ห้ามซ้ำ)
+
+// ของเพิ่ม (คิดเงิน กดได้หลายอย่าง หลายครั้ง) — ใช้ได้กับทุกเมนู
+// group = หัวข้อ, label = ชื่อบนปุ่ม, price = ราคาต่อ 1 ที่ (id ภาษาอังกฤษ ห้ามซ้ำ)
+const ADDONS = [
+  { id: "top-caramel", group: "ท็อปปิ้ง", label: "คาราเมล",      price: 5 },
+  { id: "top-oreo",    group: "ท็อปปิ้ง", label: "โอริโอ้",       price: 5 },
+  { id: "top-choc",    group: "ท็อปปิ้ง", label: "ช็อกโกแลต",     price: 5 },
+  { id: "top-whip",    group: "ท็อปปิ้ง", label: "วิปครีม",       price: 5 },
+  { id: "top-biscoff", group: "ท็อปปิ้ง", label: "บิสคอฟ",        price: 7 },
+  { id: "sauce-nutella", group: "ซอส",   label: "นูเทลล่า",      price: 7 },
+  { id: "sauce-biscoff", group: "ซอส",   label: "บิสคอฟ",        price: 7 },
+  { id: "ice-choc",    group: "ไอศกรีม", label: "ช็อกโกแลต",     price: 25 },
+  { id: "ice-straw",   group: "ไอศกรีม", label: "สตรอว์เบอร์รี", price: 25 },
+  { id: "ice-vanilla", group: "ไอศกรีม", label: "วานิลลา",       price: 25 }
+];
+
+// เมนูหลัก — ราคาตอนนี้เป็นราคาสมมติ แก้ตัวเลขหลัง price: ได้เลย (id ภาษาอังกฤษ ห้ามซ้ำ)
+// options = ชุดตัวเลือกจาก OPTION_SETS ที่เมนูนี้ต้องเลือก, ถ้าไม่มีใส่ []
 const MENU = [
-  { id: "thaitea", name: "ชาไทย",       price: 35, options: ["sweet"] },
-  { id: "cocoa",   name: "โกโก้",        price: 35, options: ["sweet"] },
-  { id: "lemon",   name: "น้ำมะนาว",     price: 30, options: ["sweet"] },
-  { id: "brownie", name: "บราวนี่",      price: 25, options: [] },
-  { id: "cookie",  name: "คุกกี้",       price: 20, options: [] },
-  { id: "toast",   name: "ปังเนยนม",     price: 30, options: [] }
+  { id: "milk",         name: "นมสด",             price: 35, options: ["sweet"] },
+  { id: "milk-oreo",    name: "นมสดโอริโอ้",       price: 45, options: ["sweet"] },
+  { id: "milk-caramel", name: "นมสดคาราเมล",       price: 45, options: ["sweet"] },
+  { id: "milk-biscoff", name: "นมสดบิสคอฟ",        price: 50, options: ["sweet"] },
+  { id: "milk-nutella", name: "นมสดนูเทลล่า",      price: 50, options: ["sweet"] },
+  { id: "cocoa",        name: "โกโก้",             price: 40, options: ["sweet"] },
+  { id: "toast",        name: "โทสต์ + ไอศกรีม",   price: 59, options: ["icecream", "freesauce"] }
 ];
 /* ============================================================ */
 
@@ -264,7 +297,9 @@ const baht = n => "฿" + (Number(n) || 0).toLocaleString("th-TH");
 const dayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
 const hhmm = t => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "";
 const thaiDate = d => new Date(d + "T12:00:00+07:00").toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
-const DEFAULT_OPTS = new Set(Object.values(OPTION_SETS).map(s => s.choices[0]));
+const DEFAULT_OPTS = new Set(Object.values(OPTION_SETS).filter(s => s.hideDefault).map(s => s.choices[0]));
+const addonName = a => a.group + a.label;
+const addChips = it => (it.adds || []).map(a => `<span class="chip add">+${esc(a.name)}${a.qty > 1 ? " ×" + esc(a.qty) : ""}</span>`).join("");
 const PAY_LABEL = { cash: "เงินสด", promptpay: "โอน" };
 const STATUS_LABEL = { pending: "กำลังทำ", done: "พร้อมรับ", picked: "รับแล้ว", cancelled: "ยกเลิก" };
 
@@ -390,7 +425,6 @@ const SHELLS = {
         <button class="mcard" data-act="menu" data-id="${esc(m.id)}">
           <span class="nm">${esc(m.name)}</span>
           <span class="pr">${baht(m.price)}</span>
-          ${m.options && m.options.length ? `<span class="badge">เลือก${m.options.map(k => OPTION_SETS[k]?.label || "").join(", ")}</span>` : ""}
         </button>`).join("")}
       </section>
       <aside class="cart">
@@ -427,7 +461,7 @@ const UPDATERS = {
     $("#kgrid").innerHTML = pend.length ? pend.map(o => `
       <article class="kcard ${fresh.includes(o.id) ? "new" : ""}">
         <header><span class="qno">#${esc(o.queueNo)}</span><span class="muted">${hhmm(o.createdAt)}</span></header>
-        <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}</li>`).join("")}</ul>
+        <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}${addChips(it)}</li>`).join("")}</ul>
         <button class="btn ok big" data-act="done" data-id="${esc(o.id)}">เสร็จแล้ว ✓</button>
       </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง</div>`;
     $("#soundBtn").textContent = soundOn ? "เสียงเปิดอยู่" : "แตะเพื่อเปิดเสียงแจ้งเตือน";
@@ -465,7 +499,7 @@ const UPDATERS = {
 };
 
 function itemsText(o) {
-  return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}`).join(", ");
+  return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}${(it.adds || []).map(a => ` +${esc(a.name)}${a.qty > 1 ? "×" + esc(a.qty) : ""}`).join("")}`).join(", ");
 }
 
 // โหมดของแต่ละเครื่องจำไว้ในเครื่องนั้นเอง (ไม่ใช้ URL) เครื่องอื่นจะไม่เปลี่ยนตาม
@@ -487,32 +521,42 @@ setInterval(() => { if (shownView === "queue") update(); }, 30000);
 
 /* ---------- cart ---------- */
 const cartTotal = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
-function addToCart(item, opts, qty) {
-  const key = item.id + "|" + opts.join(",");
+function addToCart(item, opts, add, qty) {
+  const adds = ADDONS.filter(a => add[a.id]).map(a => ({ id: a.id, name: addonName(a), price: a.price, qty: add[a.id] }));
+  const unit = item.price + adds.reduce((t, a) => t + a.price * a.qty, 0);
+  const key = item.id + "|" + opts.join(",") + "|" + adds.map(a => a.id + "x" + a.qty).join(",");
   const ex = cart.find(l => l.key === key);
-  if (ex) ex.qty += qty; else cart.push({ key, menuId: item.id, name: item.name, price: item.price, opts, qty });
+  if (ex) ex.qty += qty; else cart.push({ key, menuId: item.id, name: item.name, price: unit, opts, adds, qty });
   received = null; update();
 }
 function tapMenu(id) {
   const item = MENU.find(m => m.id === id); if (!item) return;
-  if (!item.options || !item.options.length) return addToCart(item, [], 1);
-  optState = { item, sel: Object.fromEntries(item.options.map(k => [k, OPTION_SETS[k].choices[0]])), qty: 1 };
+  const opts = (item.options || []).filter(k => OPTION_SETS[k]);
+  optState = { item, opts, sel: Object.fromEntries(opts.map(k => [k, OPTION_SETS[k].choices[0]])), add: {}, qty: 1 };
   openModal("opt", renderOpt());
 }
 function renderOpt() {
-  const { item, sel, qty } = optState;
+  const { item, opts, sel, add, qty } = optState;
+  const unit = item.price + ADDONS.reduce((t, a) => t + a.price * (add[a.id] || 0), 0);
+  const groups = [...new Set(ADDONS.map(a => a.group))];
   return `<h3>${esc(item.name)} · ${baht(item.price)}</h3>
-    ${item.options.map(k => `<div class="optgroup"><div class="lb">${esc(OPTION_SETS[k].label)}</div><div class="optchips">
+    ${opts.map(k => `<div class="optgroup"><div class="lb">${esc(OPTION_SETS[k].label)}</div><div class="optchips">
       ${OPTION_SETS[k].choices.map(c => `<button class="${sel[k] === c ? "on" : ""}" data-act="opt" data-set="${esc(k)}" data-val="${esc(c)}">${esc(c)}</button>`).join("")}
     </div></div>`).join("")}
+    ${groups.map(g => `<div class="optgroup"><div class="lb">เพิ่ม${esc(g)}</div><div class="addons">
+      ${ADDONS.filter(a => a.group === g).map(a => { const n = add[a.id] || 0; return `<div class="addon ${n ? "on" : ""}">
+        <button class="addon-main" data-act="addon" data-id="${esc(a.id)}"><span>${esc(a.label)}</span><small>+${baht(a.price)}</small></button>
+        ${n ? `<span class="addon-n">${n}</span><button class="addon-minus" data-act="addonminus" data-id="${esc(a.id)}">−</button>` : ""}
+      </div>`; }).join("")}
+    </div></div>`).join("")}
     <div class="optgroup"><div class="lb">จำนวน</div><div class="stepper"><button data-act="optdec">−</button><span>${qty}</span><button data-act="optinc">+</button></div></div>
-    <div class="row"><button class="btn ghost" data-act="close">ยกเลิก</button><button class="btn primary" data-act="optadd">เพิ่ม · ${baht(item.price * qty)}</button></div>`;
+    <div class="row"><button class="btn ghost" data-act="close">ยกเลิก</button><button class="btn primary" data-act="optadd">เพิ่ม · ${baht(unit * qty)}</button></div>`;
 }
 function renderCart() {
   const box = $("#cartItems"); if (!box) return;
   box.innerHTML = cart.length ? cart.map(l => `
     <div class="line">
-      <div><div class="nm">${esc(l.name)}</div>${l.opts.map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}</div>
+      <div><div class="nm">${esc(l.name)}</div>${l.opts.map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}${addChips(l)}</div>
       <div class="lp">${baht(l.price * l.qty)}</div>
       <div class="muted" style="font-size:14px">${baht(l.price)} / ชิ้น</div>
       <div class="stepper"><button data-act="dec" data-id="${esc(l.key)}">−</button><span>${l.qty}</span><button data-act="inc" data-id="${esc(l.key)}">+</button></div>
@@ -558,7 +602,7 @@ function placeOrder() {
   const order = {
     day: curDay, queueNo, total, payment,
     cashReceived: payment === "cash" ? received : null,
-    items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts })),
+    items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts, adds: l.adds })),
     status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null
   };
   store.add(order).catch(e => toast("บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
@@ -686,7 +730,7 @@ function beep() {
 }
 
 /* ---------- modal / toast ---------- */
-function openModal(kind, html) { modalKind = kind; $("#sheet").innerHTML = html; $("#overlay").classList.add("show"); }
+function openModal(kind, html) { modalKind = kind; $("#sheet").className = "sheet" + (kind === "opt" ? " wide" : ""); $("#sheet").innerHTML = html; $("#overlay").classList.add("show"); }
 function closeModal() { modalKind = null; optState = null; confirmCb = null; $("#overlay").classList.remove("show"); }
 $("#overlay").addEventListener("click", e => { if (e.target.id === "overlay") closeModal(); });
 let toastTimer = null;
@@ -727,7 +771,9 @@ document.addEventListener("click", e => {
     case "opt": optState.sel[t.dataset.set] = t.dataset.val; $("#sheet").innerHTML = renderOpt(); break;
     case "optinc": optState.qty++; $("#sheet").innerHTML = renderOpt(); break;
     case "optdec": if (optState.qty > 1) optState.qty--; $("#sheet").innerHTML = renderOpt(); break;
-    case "optadd": { const { item, sel, qty } = optState; addToCart(item, item.options.map(k => sel[k]), qty); closeModal(); break; }
+    case "addon": { const n = optState.add[id] || 0; if (n < 9) optState.add[id] = n + 1; $("#sheet").innerHTML = renderOpt(); break; }
+    case "addonminus": { const n = (optState.add[id] || 0) - 1; if (n > 0) optState.add[id] = n; else delete optState.add[id]; $("#sheet").innerHTML = renderOpt(); break; }
+    case "optadd": { const { item, opts, sel, add, qty } = optState; addToCart(item, opts.map(k => sel[k]), add, qty); closeModal(); break; }
   }
 });
 
