@@ -26,8 +26,8 @@ h1,h2,h3{margin:0}
 .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--dark);color:#fff;flex:none}
 .brand{font-weight:700;font-size:17px;white-space:nowrap}
 .tabs{display:flex;gap:6px;overflow-x:auto;flex:1}
-.tabs a{color:#efe3dd;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
-.tabs a.active{background:var(--accent);color:#fff}
+.tabs button{color:#efe3dd;text-decoration:none;padding:8px 14px;border-radius:999px;font-weight:500;white-space:nowrap}
+.tabs button.active{background:var(--accent);color:#fff}
 .conn{display:flex;align-items:center;gap:6px;font-size:13px;color:#efe3dd;white-space:nowrap}
 .dot{width:9px;height:9px;border-radius:50%;background:#999}
 .conn[data-s="ok"] .dot{background:var(--mint)}
@@ -61,7 +61,7 @@ main{flex:1;min-height:0;position:relative}
 .home h2{font-size:24px;color:var(--brown)}
 .tagline{color:var(--red);font-weight:600;font-size:18px;text-align:center}
 .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;width:100%;max-width:900px}
-.role{display:block;background:var(--card);border:1.5px solid var(--line);border-left:6px solid var(--red);border-radius:var(--radius);padding:28px 24px;text-decoration:none;color:inherit}
+.role{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-left:6px solid var(--red);border-radius:var(--radius);padding:28px 24px;text-decoration:none;color:inherit}
 .role:active{border-color:var(--mint)}
 .role .ic{font-size:40px}
 .role b{display:block;font-size:22px}
@@ -196,10 +196,10 @@ body[data-view="queue"] .topbar{display:none}
 <header class="topbar">
   <div class="brand" id="brand"></div>
   <nav class="tabs">
-    <a href="#cashier">แคชเชียร์</a>
-    <a href="#kitchen">ครัว</a>
-    <a href="#queue">จอเรียกคิว</a>
-    <a href="#sales">ยอดขาย</a>
+    <button data-act="go" data-id="cashier">แคชเชียร์</button>
+    <button data-act="go" data-id="kitchen">ครัว</button>
+    <button data-act="go" data-id="queue">จอเรียกคิว</button>
+    <button data-act="go" data-id="sales">ยอดขาย</button>
   </nav>
   <div class="conn" id="conn" data-s="loading"><span class="dot"></span><span id="connText">กำลังเชื่อมต่อ…</span></div>
 </header>
@@ -376,10 +376,10 @@ const SHELLS = {
     <div class="home">
       <h2>เลือกโหมด</h2>
       <div class="roles">
-        <a class="role" href="#cashier"><b>แคชเชียร์</b></a>
-        <a class="role" href="#kitchen"><b>ครัว</b></a>
-        <a class="role" href="#queue"><b>จอเรียกคิว</b></a>
-        <a class="role" href="#sales"><b>ยอดขาย</b></a>
+        <button class="role" data-act="go" data-id="cashier"><b>แคชเชียร์</b></button>
+        <button class="role" data-act="go" data-id="kitchen"><b>ครัว</b></button>
+        <button class="role" data-act="go" data-id="queue"><b>จอเรียกคิว</b></button>
+        <button class="role" data-act="go" data-id="sales"><b>ยอดขาย</b></button>
       </div>
       <p class="tagline">วัยรุ่น 67 ขายของครั้งแรก</p>
       ${mode === "live" ? `<button class="btn ghost" data-act="logout">ออกจากระบบเครื่องนี้</button>` : ""}
@@ -411,7 +411,7 @@ const SHELLS = {
       <section class="qcol ready"><h2>พร้อมรับแล้ว</h2><div class="qtiles" id="qReady"></div>
         <div class="qhint">พนักงาน: แตะเลขคิวเมื่อลูกค้ารับของแล้ว</div></section>
     </div>
-    <a class="qback" href="#">☰ เมนู</a>`,
+    <button class="qback" data-act="go" data-id="home">☰ เมนู</button>`,
   sales: () => `<div class="sales" id="salesBody"></div>`
 };
 
@@ -468,16 +468,21 @@ function itemsText(o) {
   return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}`).join(", ");
 }
 
-function currentView() { const h = location.hash.slice(1); return SHELLS[h] ? h : "home"; }
+// โหมดของแต่ละเครื่องจำไว้ในเครื่องนั้นเอง (ไม่ใช้ URL) เครื่องอื่นจะไม่เปลี่ยนตาม
+const VIEW_KEY = "openhouse-view";
+let curView = "home";
+try { const v = localStorage.getItem(VIEW_KEY); if (v && SHELLS[v]) curView = v; } catch (e) { }
+if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { } }
+function go(v) { if (!SHELLS[v]) v = "home"; curView = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) { } render(); }
+function currentView() { return curView; }
 function render() {
   const v = currentView();
   document.body.dataset.view = v;
-  $$(".tabs a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + v));
+  $$(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.id === v));
   if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); }
   update();
 }
 function update(fresh) { const f = UPDATERS[shownView]; if (f) f(fresh); }
-window.addEventListener("hashchange", render);
 setInterval(() => { if (shownView === "queue") update(); }, 30000);
 
 /* ---------- cart ---------- */
@@ -699,6 +704,7 @@ document.addEventListener("click", e => {
   const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
   const id = t.dataset.id;
   switch (t.dataset.act) {
+    case "go": go(id); break;
     case "menu": tapMenu(id); break;
     case "inc": changeQty(id, 1); break;
     case "dec": changeQty(id, -1); break;
