@@ -145,12 +145,7 @@ body[data-view="queue"] .topbar{display:none}
 .ready .qt{background:var(--accent);color:#fff;font-size:56px;width:150px;height:110px}
 .ready .qt.first{background:var(--mint);color:var(--brown);animation:glow 1.6s ease-in-out infinite}
 @keyframes glow{50%{box-shadow:0 0 0 10px rgba(255,255,255,.15)}}
-.qhint{font-size:13px;color:#bca79e}
-.qfoot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.qscan{display:flex;align-items:center;gap:10px;color:#efe3dd;font-size:14px;font-weight:600}
-.qscan #qScanQr{background:#fff;padding:6px;border-radius:10px}
-.custqr{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:14px}
-.custqr #custQr{background:#fff;padding:6px;border:1.5px solid var(--line);border-radius:10px}
+.qhint{margin-top:auto;font-size:13px;color:#bca79e}
 .qback{position:fixed;left:10px;bottom:10px;opacity:.25;background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-size:13px;text-decoration:none}
 
 /* sales */
@@ -294,11 +289,11 @@ const MENU = [
   { id: "milk-biscoff", name: "นมสดบิสคอฟ",        price: 45, options: ["sweet"] },
   { id: "milk-nutella", name: "นมสดนูเทลล่า",      price: 40, options: ["sweet"] },
   { id: "cocoa",        name: "โกโก้",             price: 30, options: ["sweet"] },
-  { id: "toast",        name: "โทสต์ + ไอศกรีม",   price: 45, options: ["icecream", "freesauce"] }
+  { id: "toast",        name: "โทสต์ + ไอศกรีม",   price: 45, options: ["icecream", "freesauce"] },
+  { id: "toast-butter", name: "โทสต์ย่างเนย",      price: 25, options: [] }
 ];
 /* ============================================================ */
 
-const QUEUE_PAGE = new URL("queue.html", location.href.split("#")[0].split("?")[0]).href;   // หน้าดูคิวของลูกค้า
 const READY_SHOW_MIN = 15;   // เลขคิว "พร้อมรับ" ค้างบนจอเรียกคิวกี่นาที
 const CASH_NOTES = [20, 50, 100, 500, 1000];
 
@@ -324,19 +319,15 @@ let soundOn = false, audioCtx = null, knownPending = null;
 let salesDay = null, salesOrders = [], salesUnsub = null, salesLoading = false;
 
 /* ---------- storage backends ---------- */
-// queue = สำเนาข้อมูลคิวแบบย่อ (เลขคิว + สถานะ ไม่มีเงิน/รายการ) ให้ลูกค้าเปิดดูใน queue.html ได้
-const QUEUE_FIELDS = ["day", "queueNo", "status", "doneAt"];
-const pubOf = o => Object.fromEntries(QUEUE_FIELDS.filter(k => k in o).map(k => [k, o[k]]));
 function firebaseStore(F, db) {
-  const col = F.collection(db, "orders"), qcol = F.collection(db, "queue");
-  const pushQueue = (id, data, merge) => F.setDoc(F.doc(qcol, id), data, merge ? { merge: true } : undefined).catch(() => { });
+  const col = F.collection(db, "orders");
   return {
     watch(day, next, err) {
       return F.onSnapshot(F.query(col, F.where("day", "==", day)), { includeMetadataChanges: true },
         s => next(s.docs.map(d => ({ ...(d.data() || {}), id: d.id })), s.metadata), err);
     },
-    add(o) { const ref = F.doc(col); const w = F.setDoc(ref, o); pushQueue(ref.id, pubOf(o), false); return w; },
-    update(id, patch) { const w = F.updateDoc(F.doc(col, id), patch); const p = pubOf(patch); if (Object.keys(p).length) pushQueue(id, p, true); return w; }
+    add(o) { return F.setDoc(F.doc(col), o); },
+    update(id, patch) { return F.updateDoc(F.doc(col, id), patch); }
   };
 }
 function localStore() {
@@ -460,8 +451,7 @@ const SHELLS = {
     <div class="qwrap">
       <section class="qcol prep"><h2>กำลังเตรียม</h2><div class="qtiles" id="qPrep"></div></section>
       <section class="qcol ready"><h2>พร้อมรับแล้ว</h2><div class="qtiles" id="qReady"></div>
-        <div class="qfoot"><div class="qhint">พนักงาน: แตะเลขคิวเมื่อลูกค้ารับของแล้ว</div>
-          <div class="qscan"><div id="qScanQr"></div><span>สแกนดูคิว<br>บนมือถือ</span></div></div></section>
+        <div class="qhint">พนักงาน: แตะเลขคิวเมื่อลูกค้ารับของแล้ว</div></section>
     </div>
     <button class="qback" data-act="go" data-id="home">☰ เมนู</button>`,
   sales: () => `<div class="sales" id="salesBody"></div>`
@@ -554,7 +544,7 @@ function render() {
   const v = currentView();
   document.body.dataset.view = v;
   $$(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.id === v));
-  if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); if (v === "queue") makeQR($("#qScanQr"), QUEUE_PAGE, 110); }
+  if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); }
   update();
 }
 function update(fresh) { const f = UPDATERS[shownView]; if (f) f(fresh); }
@@ -651,9 +641,7 @@ function placeOrder() {
   cart = []; received = null; payment = "cash";
   openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า</div><div class="n">${queueNo}</div>
     <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p></div>
-    <div class="custqr"><div id="custQr"></div><div>ให้ลูกค้าสแกน<br>เพื่อดูคิวบนมือถือ</div></div>
     <button class="btn primary big" data-act="close">ออเดอร์ถัดไป</button>`);
-  makeQR($("#custQr"), QUEUE_PAGE + "?n=" + queueNo, 132);
   update();
 }
 
@@ -712,9 +700,6 @@ function promptpayPayload(target, amount) {
   const p = tlv("00", "01") + tlv("01", amount ? "12" : "11") + tlv("29", tlv("00", "A000000677010111") + acct)
     + tlv("58", "TH") + tlv("53", "764") + (amount ? tlv("54", amount.toFixed(2)) : "") + "6304";
   return p + crc16(p);
-}
-function makeQR(el, text, size) {
-  try { new QRCode(el, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { }
 }
 function openQR() {
   const total = cartTotal();
