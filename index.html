@@ -79,7 +79,7 @@ main{flex:1;min-height:0;position:relative}
 .cart{background:var(--card);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .cart-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1.5px solid var(--line)}
 .cart-head h2{font-size:18px}
-.cart-items{flex:1;overflow:auto;padding:8px 16px;min-height:110px}
+.cart-items{flex:1;overflow:auto;padding:8px 16px}
 .line{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .line .nm{font-weight:600}
 .line .lp{text-align:right;font-weight:600}
@@ -97,21 +97,6 @@ main{flex:1;min-height:0;position:relative}
 .cashbtns button.on{background:var(--ink);color:#fff}
 .change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok-ink);font-weight:600}
 .change.bad{background:#fde4e4;color:var(--danger)}
-.cart-extra{border-top:1.5px solid var(--line);padding:10px 16px 0;display:flex;flex-direction:column;gap:8px}
-.cart-extra .seg button{padding:9px}
-.cart-extra .lbl{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:-4px}
-.note-in{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);width:100%;resize:none;height:44px;user-select:text;-webkit-user-select:text}
-.note-in:focus{outline:none;border-color:var(--accent)}
-.ptimes{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.ptimes{flex-wrap:nowrap}
-.ptimes button{padding:7px 9px;white-space:nowrap;border-radius:10px;background:var(--chip);font-weight:600;font-size:15px}
-.ptimes button.on{background:var(--ink);color:#fff}
-.ptimes input{font:inherit;font-size:15px;padding:5px 6px;min-width:0;flex:1;border-radius:10px;border:1.5px solid var(--line)}
-.knote{background:#fff6d6;border-left:5px solid #f1b51c;border-radius:8px;padding:6px 10px;font-size:17px;line-height:1.4}
-.kpick{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:700;font-size:16px;background:var(--chip);color:var(--muted)}
-.kpick.later{background:var(--accent-soft);color:var(--accent)}
-.qt small{display:block;font-size:14px;font-weight:600;opacity:.85;line-height:1}
-.prep .qt{flex-direction:column}
 .kp-display{text-align:center;font-size:56px;font-weight:700;color:var(--ink);padding:8px 0 0;font-variant-numeric:tabular-nums}
 .kp-sub{text-align:center;font-weight:600;padding:8px;border-radius:10px;background:var(--chip);color:var(--muted)}
 .kp-sub.ok{background:var(--ok-soft);color:var(--ok-ink)}
@@ -171,6 +156,39 @@ body[data-view="queue"] .topbar{display:none}
 .daynav input{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);user-select:text;-webkit-user-select:text}
 .daynav .lbl{font-weight:600;color:var(--brown);margin-left:4px}
 .daynav .past{background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px}
+.exportbar{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px}
+#printArea{display:none}
+.rp{width:700px;box-sizing:border-box;padding:4px;background:#fff;color:#000;font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:13px;line-height:1.45}
+.rp h1{font-size:22px;margin:0}
+.rp .meta{color:#555;margin:2px 0 10px}
+.rp h2{font-size:16px;margin:14px 0 6px}
+.rp table{width:100%;border-collapse:collapse}
+.rp th,.rp td{border:1px solid #9a9a9a;padding:5px 7px;text-align:left;vertical-align:top}
+.rp th{background:#e9e1db}
+.rp td.num,.rp th.num{text-align:right}
+.rp tr.cx td{color:#999;text-decoration:line-through}
+.rp tfoot td{font-weight:700;background:#f5efea}
+.rp tr{page-break-inside:avoid;break-inside:avoid}
+.rp .orders td,.rp .orders th{white-space:nowrap}
+.rp .orders td:nth-child(4){white-space:normal;width:100%}
+#pdfStage{position:fixed;left:-10000px;top:0;z-index:-1}
+@media print{
+  @page{size:A4;margin:12mm}
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+  body{display:block!important}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block;color:#000;font-size:10.5pt}
+  .rp h1{font-size:18pt;margin:0}
+  .rp .meta{color:#555;margin:2px 0 10px}
+  .rp h2{font-size:12.5pt;margin:12px 0 4px}
+  .rp table{width:100%;border-collapse:collapse}
+  .rp th,.rp td{border:1px solid #9a9a9a;padding:4px 6px;text-align:left;vertical-align:top}
+  .rp th{background:#e9e1db;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rp td.num,.rp th.num{text-align:right}
+  .rp tr.cx td{color:#999;text-decoration:line-through}
+  .rp tfoot td{font-weight:700;background:#f5efea;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rp tr{page-break-inside:avoid}
+}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .stat{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:18px}
 .stat .lb{color:var(--muted);font-size:14px}
@@ -247,6 +265,8 @@ body[data-view="queue"] .topbar{display:none}
 </div>
 <main id="main"></main>
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div id="printArea"></div>
+<div id="pdfStage"></div>
 <div class="toast" id="toast"><span id="toastText"></span><button id="toastBtn" hidden></button></div>
 
 <script type="module">
@@ -286,7 +306,7 @@ const ADDONS = [
   { id: "top-caramel", group: "ท็อปปิ้ง", label: "คาราเมล",      price: 5 },
   { id: "top-oreo",    group: "ท็อปปิ้ง", label: "โอริโอ้",       price: 5 },
   { id: "top-choc",    group: "ท็อปปิ้ง", label: "ช็อกโกแลต",     price: 5 },
-  { id: "top-whip",    group: "ท็อปปิ้ง", label: "วิปครีม",       price: 20 },
+  { id: "top-whip",    group: "ท็อปปิ้ง", label: "วิปครีม",       price: 15 },
   { id: "top-biscoff", group: "ท็อปปิ้ง", label: "บิสคอฟ",        price: 7 },
   { id: "sauce-nutella", group: "ซอส",   label: "นูเทลล่า",      price: 7 },
   { id: "sauce-biscoff", group: "ซอส",   label: "บิสคอฟ",        price: 7 },
@@ -304,7 +324,7 @@ const MENU = [
   { id: "milk-biscoff", name: "นมสดบิสคอฟ",        price: 45, options: ["sweet"] },
   { id: "milk-nutella", name: "นมสดนูเทลล่า",      price: 40, options: ["sweet"] },
   { id: "cocoa",        name: "โกโก้",             price: 30, options: ["sweet"] },
-  { id: "toast",        name: "โทสต์ + ไอศกรีม",   price: 45, options: ["icecream", "freesauce"] },
+  { id: "toast",        name: "โทสต์ + ไอศกรีม",   price: 35, options: ["icecream", "freesauce"] },
   { id: "toast-butter", name: "โทสต์ย่างเนย",      price: 25, options: [] }
 ];
 /* ============================================================ */
@@ -318,7 +338,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const baht = n => "฿" + (Number(n) || 0).toLocaleString("th-TH");
 const dayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(new Date());
 const hhmm = t => t ? new Date(t).toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok", hour: "2-digit", minute: "2-digit" }) : "";
-const thaiDate = d => new Date(d + "T12:00:00+07:00").toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long" });
+const thaiDate = d => new Date(d + "T12:00:00+07:00").toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const DEFAULT_OPTS = new Set(Object.values(OPTION_SETS).filter(s => s.hideDefault).map(s => s.choices[0]));
 const addonName = a => a.group + a.label;
 const addChips = it => (it.adds || []).map(a => `<span class="chip add">+${esc(a.name)}${a.qty > 1 ? " ×" + esc(a.qty) : ""}</span>`).join("");
@@ -328,7 +348,7 @@ const STATUS_LABEL = { pending: "กำลังทำ", done: "พร้อม�
 /* ---------- state ---------- */
 let store = null, mode = "loading", ready = false;
 let orders = [], curDay = dayKey(), unsub = null, loadTimer = null;
-let cart = [], payment = "cash", received = null, note = "", pickup = "now", pickupTime = "";
+let cart = [], payment = "cash", received = null;
 let shownView = null, modalKind = null, optState = null, confirmCb = null;
 let soundOn = false, audioCtx = null, knownPending = null;
 let salesDay = null, salesOrders = [], salesUnsub = null, salesLoading = false;
@@ -453,11 +473,6 @@ const SHELLS = {
       <aside class="cart">
         <div class="cart-head"><h2>ออเดอร์ใหม่</h2><button class="btn ghost" data-act="recent">ออเดอร์วันนี้ <span id="recentCount"></span></button></div>
         <div class="cart-items" id="cartItems"></div>
-        <div class="cart-extra">
-          <div class="lbl">เวลารับสินค้า</div>
-          <div id="pickupBox"></div>
-          <textarea class="note-in" id="noteIn" maxlength="200" placeholder="หมายเหตุ (ถ้ามี) เช่น ไม่ใส่น้ำแข็ง, แยกถุง, ชื่อลูกค้า"></textarea>
-        </div>
         <div class="cart-foot" id="cartFoot"></div>
       </aside>
     </div>`,
@@ -489,9 +504,7 @@ const UPDATERS = {
     $("#kgrid").innerHTML = pend.length ? pend.map(o => `
       <article class="kcard ${fresh.includes(o.id) ? "new" : ""}">
         <header><span class="qno">#${esc(o.queueNo)}</span><span class="muted">${hhmm(o.createdAt)}</span></header>
-        <div><span class="kpick ${o.pickup === "later" ? "later" : ""}">${esc(pickupText(o))}</span></div>
         <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}${addChips(it)}</li>`).join("")}</ul>
-        ${o.note ? `<div class="knote"><b>หมายเหตุ:</b> ${esc(o.note)}</div>` : ""}
         <button class="btn ok big" data-act="done" data-id="${esc(o.id)}">เสร็จแล้ว ✓</button>
       </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง</div>`;
     $("#soundBtn").textContent = soundOn ? "เสียงเปิดอยู่" : "แตะเพื่อเปิดเสียงแจ้งเตือน";
@@ -501,7 +514,7 @@ const UPDATERS = {
     const prep = orders.filter(o => o.status === "pending");
     const rdy = orders.filter(o => o.status === "done" && now - (o.doneAt || 0) < READY_SHOW_MIN * 60000)
       .sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
-    $("#qPrep").innerHTML = prep.map(o => `<div class="qt">${esc(o.queueNo)}${o.pickup === "later" && o.pickupTime ? `<small>${esc(o.pickupTime)}</small>` : ""}</div>`).join("") || `<span style="color:#a8998a">—</span>`;
+    $("#qPrep").innerHTML = prep.map(o => `<div class="qt">${esc(o.queueNo)}</div>`).join("") || `<span style="color:#a8998a">—</span>`;
     $("#qReady").innerHTML = rdy.map((o, i) => `<button class="qt ${i === 0 ? "first" : ""}" data-act="pick" data-id="${esc(o.id)}">${esc(o.queueNo)}</button>`).join("") || `<span style="color:#a8998a;font-size:20px">—</span>`;
   },
   sales() {
@@ -518,6 +531,10 @@ const UPDATERS = {
         <button class="arrow" data-act="day" data-id="1" aria-label="วันถัดไป" ${day >= curDay ? "disabled" : ""}>›</button>
         ${salesDay ? `<button class="btn ghost" data-act="today">กลับไปวันนี้</button><span class="past">ข้อมูลย้อนหลัง</span>` : ""}
         <span class="lbl">${esc(thaiDate(day))}</span>
+      </div>
+      <div class="exportbar">
+        <button class="btn ghost" data-act="pdf" ${list.length && !salesLoading ? "" : "disabled"}>ดาวน์โหลด PDF</button>
+        <button class="btn ghost" data-act="xlsx" ${list.length && !salesLoading ? "" : "disabled"}>ดาวน์โหลด Excel</button>
       </div>
       <div class="stats">
         <div class="stat hero"><div class="lb">${salesDay ? "ยอดขายรวมวันนั้น" : "ยอดขายรวมวันนี้"}</div><div class="v">${baht(sum(ok))}</div></div>
@@ -551,6 +568,97 @@ function setSalesDay(d) {
 }
 document.addEventListener("change", e => { if (e.target.id === "salesDate" && e.target.value) setSalesDay(e.target.value); });
 
+/* ---------- ส่งออกยอดขาย (PDF / Excel) ---------- */
+function plainItems(o) {
+  return (o.items || []).map(it => `${it.name}×${it.qty}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${x})`).join("")}${(it.adds || []).map(a => ` +${a.name}${a.qty > 1 ? "×" + a.qty : ""}`).join("")}`).join(", ");
+}
+function salesData() {
+  const day = salesDay || curDay, list = salesDay ? salesOrders : orders;
+  const ok = list.filter(o => o.status !== "cancelled");
+  const sum = arr => arr.reduce((t, o) => t + (Number(o.total) || 0), 0);
+  const byMenu = {};
+  ok.forEach(o => (o.items || []).forEach(it => {
+    const m = byMenu[it.name] || (byMenu[it.name] = { qty: 0, amt: 0 });
+    m.qty += Number(it.qty) || 0; m.amt += (Number(it.price) || 0) * (Number(it.qty) || 0);
+  }));
+  return {
+    day, list, ok, total: sum(ok), cash: sum(ok.filter(o => o.payment === "cash")), pp: sum(ok.filter(o => o.payment === "promptpay")),
+    qty: ok.reduce((t, o) => t + (o.items || []).reduce((a, it) => a + (Number(it.qty) || 0), 0), 0),
+    cx: list.length - ok.length, byMenu
+  };
+}
+function reportHTML() {
+  const d = salesData();
+  const menuRows = Object.entries(d.byMenu).sort((a, b) => b[1].qty - a[1].qty);
+  return `<div class="rp">
+    <h1>รายงานยอดขาย ${esc(SHOP.name)}</h1>
+    <div class="meta">${esc(thaiDate(d.day))} · พิมพ์เมื่อ ${hhmm(Date.now())} น.</div>
+    <h2>สรุป</h2>
+    <table><tbody>
+      <tr><th>ยอดขายรวม</th><td class="num">${baht(d.total)}</td><th>จำนวนออเดอร์</th><td class="num">${d.ok.length}</td></tr>
+      <tr><th>เงินสด</th><td class="num">${baht(d.cash)}</td><th>ขายไปทั้งหมด (ชิ้น/แก้ว)</th><td class="num">${d.qty}</td></tr>
+      <tr><th>โอน</th><td class="num">${baht(d.pp)}</td><th>ยกเลิก</th><td class="num">${d.cx}</td></tr>
+    </tbody></table>
+    <h2>แยกตามเมนู</h2>
+    <table><thead><tr><th>เมนู</th><th class="num">จำนวน</th><th class="num">ยอด (รวมของเพิ่ม)</th></tr></thead>
+      <tbody>${menuRows.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${v.qty}</td><td class="num">${baht(v.amt)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>รวม</td><td class="num">${d.qty}</td><td class="num">${baht(d.total)}</td></tr></tfoot></table>
+    <h2>รายการออเดอร์</h2>
+    <table class="orders"><thead><tr><th>#</th><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead>
+      <tbody>${d.list.map((o, i) => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${i + 1}</td><td>${hhmm(o.createdAt)}</td><td>${esc(o.queueNo)}</td>
+        <td>${esc(plainItems(o))}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td><td>${esc(STATUS_LABEL[o.status] || o.status)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="5">รวม (ไม่นับที่ยกเลิก)</td><td class="num">${baht(d.total)}</td><td></td></tr></tfoot></table>
+  </div>`;
+}
+let pdfBusy = false;
+async function exportPDF() {
+  const d = salesData(); if (!d.list.length || pdfBusy) return;
+  pdfBusy = true; toast("กำลังสร้างไฟล์ PDF…");
+  try {
+    if (!window.html2pdf) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
+    const stage = $("#pdfStage");
+    stage.innerHTML = reportHTML();
+    try { await document.fonts.ready; } catch (e) { }
+    await window.html2pdf().set({
+      margin: [10, 8, 10, 8],
+      filename: `MA-LO-KO_ยอดขาย_${d.day}.pdf`,
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: { scale: 2, backgroundColor: "#ffffff" },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css"], avoid: "tr" }
+    }).from(stage.firstElementChild).save();
+    stage.innerHTML = "";
+    toast("บันทึกไฟล์ PDF แล้ว");
+  } catch (e) {
+    // สำรอง: ถ้าสร้างไฟล์ตรงไม่ได้ ใช้หน้าต่างพิมพ์แทน (เลือก Save as PDF)
+    $("#printArea").innerHTML = reportHTML();
+    toast("สร้างไฟล์ตรงไม่ได้ เปิดหน้าต่างพิมพ์แทน — เลือก Save as PDF");
+    setTimeout(() => { try { window.print(); } catch (err) { } }, 300);
+  }
+  pdfBusy = false;
+}
+function loadScript(src) {
+  return new Promise((res, rej) => { const el = document.createElement("script"); el.src = src; el.onload = res; el.onerror = rej; document.head.appendChild(el); });
+}
+async function exportExcel() {
+  const d = salesData(); if (!d.list.length) return;
+  if (!window.XLSX) {
+    try { await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"); }
+    catch (e) { toast("โหลดตัวสร้างไฟล์ Excel ไม่ได้ ตรวจอินเทอร์เน็ต"); return; }
+  }
+  const X = window.XLSX;
+  const summary = [["รายงานยอดขาย " + SHOP.name], ["วันที่", thaiDate(d.day)], [],
+    ["ยอดขายรวม (บาท)", d.total], ["เงินสด (บาท)", d.cash], ["โอน (บาท)", d.pp], ["จำนวนออเดอร์", d.ok.length], ["ขายไปทั้งหมด (ชิ้น/แก้ว)", d.qty], ["ยกเลิก", d.cx], [],
+    ["เมนู", "จำนวน", "ยอด (บาท)"], ...Object.entries(d.byMenu).sort((a, b) => b[1].qty - a[1].qty).map(([k, v]) => [k, v.qty, v.amt]), ["รวม", d.qty, d.total]];
+  const rows = [["#", "เวลา", "คิว", "รายการ", "ชำระ", "ยอด (บาท)", "สถานะ"],
+    ...d.list.map((o, i) => [i + 1, hhmm(o.createdAt), Number(o.queueNo) || o.queueNo, plainItems(o), PAY_LABEL[o.payment] || o.payment, Number(o.total) || 0, STATUS_LABEL[o.status] || o.status])];
+  const ws1 = X.utils.aoa_to_sheet(summary); ws1["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 12 }];
+  const ws2 = X.utils.aoa_to_sheet(rows); ws2["!cols"] = [{ wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 60 }, { wch: 9 }, { wch: 10 }, { wch: 10 }];
+  const wb = X.utils.book_new();
+  X.utils.book_append_sheet(wb, ws1, "สรุป"); X.utils.book_append_sheet(wb, ws2, "ออเดอร์");
+  X.writeFile(wb, `MA-LO-KO_ยอดขาย_${d.day}.xlsx`);
+}
+
 function itemsText(o) {
   return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}${(it.adds || []).map(a => ` +${esc(a.name)}${a.qty > 1 ? "×" + esc(a.qty) : ""}`).join("")}`).join(", ");
 }
@@ -566,7 +674,7 @@ function render() {
   const v = currentView();
   document.body.dataset.view = v;
   $$(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.id === v));
-  if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); const n = $("#noteIn"); if (n) n.value = note; }
+  if (v !== shownView) { shownView = v; closeModal(); $("#main").innerHTML = SHELLS[v](); }
   update();
 }
 function update(fresh) { const f = UPDATERS[shownView]; if (f) f(fresh); }
@@ -574,23 +682,6 @@ setInterval(() => { if (shownView === "queue") update(); }, 30000);
 
 /* ---------- cart ---------- */
 const cartTotal = () => cart.reduce((s, l) => s + l.price * l.qty, 0);
-const pad2 = n => String(n).padStart(2, "0");
-const inMin = m => { const d = new Date(Date.now() + m*60000); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); };
-const pickupText = o => o.pickup === "later" && o.pickupTime ? `มารับ ${o.pickupTime} น.` : "รับเลย";
-function renderPickup() {
-  const box = $("#pickupBox"); if (!box) return;
-  const quick = [15, 30, 60];
-  box.innerHTML = `<div class="seg">
-      <button class="${pickup === "now" ? "on" : ""}" data-act="pickup" data-id="now">รับเลย</button>
-      <button class="${pickup === "later" ? "on" : ""}" data-act="pickup" data-id="later">มารับทีหลัง</button>
-    </div>
-    ${pickup === "later" ? `<div class="ptimes" style="margin-top:8px">
-      ${quick.map(m => `<button class="${pickupTime === inMin(m) ? "on" : ""}" data-act="ptime" data-id="${m}">${m < 60 ? "+" + m + " นาที" : "+1 ชม."}</button>`).join("")}
-      <input type="time" id="ptimeIn" value="${esc(pickupTime)}" aria-label="ระบุเวลารับ">
-    </div>` : ""}`;
-  const ti = $("#ptimeIn"); if (ti) ti.addEventListener("change", () => { pickupTime = ti.value; renderPickup(); update(); });
-}
-function resetExtras() { note = ""; pickup = "now"; pickupTime = ""; const n = $("#noteIn"); if (n) n.value = ""; renderPickup(); }
 function addToCart(item, opts, add, qty) {
   const adds = ADDONS.filter(a => add[a.id]).map(a => ({ id: a.id, name: addonName(a), price: a.price, qty: add[a.id] }));
   const unit = item.price + adds.reduce((t, a) => t + a.price * a.qty, 0);
@@ -632,10 +723,8 @@ function renderCart() {
       <div class="stepper"><button data-act="dec" data-id="${esc(l.key)}">−</button><span>${l.qty}</span><button data-act="inc" data-id="${esc(l.key)}">+</button></div>
     </div>`).join("") : `<p class="muted" style="text-align:center;margin-top:40px">แตะเมนูทางซ้ายเพื่อเพิ่มรายการ</p>`;
 
-  const pb = $("#pickupBox"); if (pb && !pb.innerHTML) renderPickup();
   const total = cartTotal();
   const short = payment === "cash" && received != null && received < total;
-  const needTime = pickup === "later" && !pickupTime;
   const notes = CASH_NOTES.filter(n => n >= total || total === 0);
   const shownNotes = notes.slice(0, 4);
   const customOn = received != null && received !== total && !shownNotes.includes(received);
@@ -655,7 +744,7 @@ function renderCart() {
       : `<div class="muted" style="font-size:14px">${SHOP.promptpay ? "กดแล้วจะขึ้น QR พร้อมยอดเงินให้ลูกค้าสแกน" : "ให้ลูกค้าสแกน QR ร้าน แล้วตรวจสลิปก่อนกดยืนยัน"}</div>`}
     <div class="row">
       ${cart.length ? `<button class="btn ghost" style="flex:0 0 auto" data-act="clearcart">ล้าง</button>` : ""}
-      <button class="btn primary big" data-act="confirm" ${!cart.length || short || needTime || !ready ? "disabled" : ""}>${!ready ? "กำลังเชื่อมต่อ…" : needTime ? "เลือกเวลารับก่อน" : confirmLabel}</button>
+      <button class="btn primary big" data-act="confirm" ${!cart.length || short || !ready ? "disabled" : ""}>${ready ? confirmLabel : "กำลังเชื่อมต่อ…"}</button>
     </div>`;
 }
 function changeQty(key, d) {
@@ -664,7 +753,7 @@ function changeQty(key, d) {
   received = null; update();
 }
 function onConfirm() {
-  if (!cart.length || !ready || (pickup === "later" && !pickupTime)) return;
+  if (!cart.length || !ready) return;
   if (payment === "promptpay" && SHOP.promptpay) return openQR();
   placeOrder();
 }
@@ -675,16 +764,13 @@ function placeOrder() {
     day: curDay, queueNo, total, payment,
     cashReceived: payment === "cash" ? received : null,
     items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts, adds: l.adds })),
-    note: note.trim(), pickup, pickupTime: pickup === "later" ? pickupTime : null,
     status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null
   };
   store.add(order).catch(e => toast("บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
   const ch = order.cashReceived != null ? ` · รับ ${baht(order.cashReceived)} ทอน ${baht(order.cashReceived - total)}` : "";
-  cart = []; received = null; payment = "cash"; resetExtras();
+  cart = []; received = null; payment = "cash";
   openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า</div><div class="n">${queueNo}</div>
-    <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p>
-    <p style="margin:6px 0 0;font-weight:700;color:var(--accent)">${esc(pickupText(order))}</p>
-    ${order.note ? `<p style="margin:6px 0 0">หมายเหตุ: ${esc(order.note)}</p>` : ""}</div>
+    <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p></div>
     <button class="btn primary big" data-act="close">ออเดอร์ถัดไป</button>`);
   update();
 }
@@ -762,7 +848,7 @@ function renderRecent() {
     <div class="olist">${list.length ? list.map(o => `
       <div class="orow ${o.status === "cancelled" ? "cx" : ""}">
         <div class="q">#${esc(o.queueNo)}</div>
-        <div><div class="its">${itemsText(o)}</div>${o.note ? `<div style="font-size:14px">หมายเหตุ: ${esc(o.note)}</div>` : ""}<div class="muted" style="font-size:13px">${hhmm(o.createdAt)} · ${baht(o.total)} · ${esc(PAY_LABEL[o.payment] || "")} · ${esc(pickupText(o))} <span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></div></div>
+        <div><div class="its">${itemsText(o)}</div><div class="muted" style="font-size:13px">${hhmm(o.createdAt)} · ${baht(o.total)} · ${esc(PAY_LABEL[o.payment] || "")} <span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></div></div>
         <div>${o.status !== "cancelled" ? `<button class="btn" style="color:var(--danger)" data-act="cancel" data-id="${esc(o.id)}">ยกเลิก</button>` : ""}</div>
       </div>`).join("") : `<p class="muted">ยังไม่มีออเดอร์</p>`}</div>`;
 }
@@ -826,14 +912,14 @@ document.addEventListener("click", e => {
     case "go": go(id); break;
     case "day": setSalesDay(shiftDay(salesDay || curDay, Number(id))); break;
     case "today": setSalesDay(null); break;
+    case "pdf": exportPDF(); break;
+    case "xlsx": exportExcel(); break;
     case "menu": tapMenu(id); break;
     case "inc": changeQty(id, 1); break;
     case "dec": changeQty(id, -1); break;
     case "pay": payment = id; received = null; update(); break;
     case "cash": received = id === "exact" ? cartTotal() : Number(id); update(); break;
-    case "clearcart": cart = []; received = null; resetExtras(); update(); break;
-    case "pickup": pickup = id; if (id === "later" && !pickupTime) pickupTime = inMin(15); renderPickup(); update(); break;
-    case "ptime": pickupTime = inMin(Number(id)); renderPickup(); update(); break;
+    case "clearcart": cart = []; received = null; update(); break;
     case "custom": openKeypad(); break;
     case "kp": keypadPress(id); break;
     case "kpok": keypadOk(); break;
@@ -856,7 +942,6 @@ document.addEventListener("click", e => {
   }
 });
 
-document.addEventListener("input", e => { if (e.target.id === "noteIn") note = e.target.value; });
 $("#brand").textContent = SHOP.name;
 render();
 initStore();
