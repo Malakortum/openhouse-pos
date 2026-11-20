@@ -97,6 +97,17 @@ main{flex:1;min-height:0;position:relative}
 .cashbtns button.on{background:var(--ink);color:#fff}
 .change{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok-ink);font-weight:600}
 .change.bad{background:#fde4e4;color:var(--danger)}
+.custbtn{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px dashed var(--line)!important;color:var(--muted);font-weight:600}
+.custbtn.set{border-style:solid!important;border-color:var(--accent)!important;background:var(--accent-soft);color:var(--accent)}
+.custbtn small{display:block;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+textarea.input{resize:none;min-height:84px;font-size:18px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600}
+.kcust{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:700;font-size:18px}
+.kcust .pick{background:var(--ink);color:#fff;font-size:14px;padding:2px 10px;border-radius:999px}
+.knote{background:#fff6d6;border:1.5px solid #f0d98a;border-radius:10px;padding:8px 10px;font-size:16px;color:#5c4a00}
+.cinfo{font-size:13px;color:var(--muted)}
+.cinfo b{color:var(--ink)}
 .kp-display{text-align:center;font-size:56px;font-weight:700;color:var(--ink);padding:8px 0 0;font-variant-numeric:tabular-nums}
 .kp-sub{text-align:center;font-weight:600;padding:8px;border-radius:10px;background:var(--chip);color:var(--muted)}
 .kp-sub.ok{background:var(--ok-soft);color:var(--ok-ink)}
@@ -170,7 +181,7 @@ body[data-view="queue"] .topbar{display:none}
 .rp tfoot td{font-weight:700;background:#f5efea}
 .rp tr{page-break-inside:avoid;break-inside:avoid}
 .rp .orders td,.rp .orders th{white-space:nowrap}
-.rp .orders td:nth-child(4){white-space:normal;width:100%}
+.rp .orders td:nth-child(5){white-space:normal;width:100%}
 #pdfStage{position:fixed;left:-10000px;top:0;z-index:-1}
 @media print{
   @page{size:A4;margin:12mm}
@@ -349,6 +360,7 @@ const STATUS_LABEL = { pending: "กำลังทำ", done: "พร้อม�
 let store = null, mode = "loading", ready = false;
 let orders = [], curDay = dayKey(), unsub = null, loadTimer = null;
 let cart = [], payment = "cash", received = null;
+let cust = { name: "", pickup: "", note: "" };   // ชื่อลูกค้า / เวลารับ / หมายเหตุ ของออเดอร์ที่กำลังสั่ง
 let shownView = null, modalKind = null, optState = null, confirmCb = null;
 let soundOn = false, audioCtx = null, knownPending = null;
 let salesDay = null, salesOrders = [], salesUnsub = null, salesLoading = false;
@@ -504,7 +516,9 @@ const UPDATERS = {
     $("#kgrid").innerHTML = pend.length ? pend.map(o => `
       <article class="kcard ${fresh.includes(o.id) ? "new" : ""}">
         <header><span class="qno">#${esc(o.queueNo)}</span><span class="muted">${hhmm(o.createdAt)}</span></header>
+        ${o.customerName || o.pickupTime ? `<div class="kcust">${o.customerName ? esc(o.customerName) : ""}${o.pickupTime ? `<span class="pick">รับ ${esc(o.pickupTime)} น.</span>` : ""}</div>` : ""}
         <ul>${(o.items || []).map(it => `<li><b>${esc(it.qty)}×</b> ${esc(it.name)} ${(it.opts || []).map(x => `<span class="chip ${DEFAULT_OPTS.has(x) ? "" : "hl"}">${esc(x)}</span>`).join("")}${addChips(it)}</li>`).join("")}</ul>
+        ${o.note ? `<div class="knote">หมายเหตุ: ${esc(o.note)}</div>` : ""}
         <button class="btn ok big" data-act="done" data-id="${esc(o.id)}">เสร็จแล้ว ✓</button>
       </article>`).join("") : `<div class="empty">ไม่มีออเดอร์ค้าง</div>`;
     $("#soundBtn").textContent = soundOn ? "เสียงเปิดอยู่" : "แตะเพื่อเปิดเสียงแจ้งเตือน";
@@ -546,7 +560,7 @@ const UPDATERS = {
       </div>
       ${salesLoading ? `<div class="empty">กำลังโหลดข้อมูล…</div>` : list.length ? `<table class="tbl"><thead><tr><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead><tbody>
         ${[...list].reverse().map(o => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${hhmm(o.createdAt)}</td><td>#${esc(o.queueNo)}</td>
-        <td>${itemsText(o)}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td>
+        <td>${itemsText(o)}${custInfo(o) ? `<div class="cinfo">${custInfo(o)}</div>` : ""}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td>
         <td><span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></td></tr>`).join("")}
       </tbody></table>` : `<div class="empty">${salesDay ? "ไม่มีออเดอร์ในวันนั้น" : "ยังไม่มีออเดอร์วันนี้"}</div>`}`;
   }
@@ -604,10 +618,10 @@ function reportHTML() {
       <tbody>${menuRows.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num">${v.qty}</td><td class="num">${baht(v.amt)}</td></tr>`).join("")}</tbody>
       <tfoot><tr><td>รวม</td><td class="num">${d.qty}</td><td class="num">${baht(d.total)}</td></tr></tfoot></table>
     <h2>รายการออเดอร์</h2>
-    <table class="orders"><thead><tr><th>#</th><th>เวลา</th><th>คิว</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead>
-      <tbody>${d.list.map((o, i) => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${i + 1}</td><td>${hhmm(o.createdAt)}</td><td>${esc(o.queueNo)}</td>
-        <td>${esc(plainItems(o))}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td><td>${esc(STATUS_LABEL[o.status] || o.status)}</td></tr>`).join("")}</tbody>
-      <tfoot><tr><td colspan="5">รวม (ไม่นับที่ยกเลิก)</td><td class="num">${baht(d.total)}</td><td></td></tr></tfoot></table>
+    <table class="orders"><thead><tr><th>#</th><th>เวลา</th><th>คิว</th><th>ลูกค้า</th><th>รายการ</th><th>ชำระ</th><th class="num">ยอด</th><th>สถานะ</th></tr></thead>
+      <tbody>${d.list.map((o, i) => `<tr class="${o.status === "cancelled" ? "cx" : ""}"><td>${i + 1}</td><td>${hhmm(o.createdAt)}</td><td>${esc(o.queueNo)}</td><td>${esc(o.customerName || "")}${o.pickupTime ? `<br>รับ ${esc(o.pickupTime)}` : ""}</td>
+        <td>${esc(plainItems(o))}${o.note ? `<br><i>หมายเหตุ: ${esc(o.note)}</i>` : ""}</td><td>${esc(PAY_LABEL[o.payment] || o.payment)}</td><td class="num">${baht(o.total)}</td><td>${esc(STATUS_LABEL[o.status] || o.status)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="6">รวม (ไม่นับที่ยกเลิก)</td><td class="num">${baht(d.total)}</td><td></td></tr></tfoot></table>
   </div>`;
 }
 let pdfBusy = false;
@@ -650,15 +664,22 @@ async function exportExcel() {
   const summary = [["รายงานยอดขาย " + SHOP.name], ["วันที่", thaiDate(d.day)], [],
     ["ยอดขายรวม (บาท)", d.total], ["เงินสด (บาท)", d.cash], ["โอน (บาท)", d.pp], ["จำนวนออเดอร์", d.ok.length], ["ขายไปทั้งหมด (ชิ้น/แก้ว)", d.qty], ["ยกเลิก", d.cx], [],
     ["เมนู", "จำนวน", "ยอด (บาท)"], ...Object.entries(d.byMenu).sort((a, b) => b[1].qty - a[1].qty).map(([k, v]) => [k, v.qty, v.amt]), ["รวม", d.qty, d.total]];
-  const rows = [["#", "เวลา", "คิว", "รายการ", "ชำระ", "ยอด (บาท)", "สถานะ"],
-    ...d.list.map((o, i) => [i + 1, hhmm(o.createdAt), Number(o.queueNo) || o.queueNo, plainItems(o), PAY_LABEL[o.payment] || o.payment, Number(o.total) || 0, STATUS_LABEL[o.status] || o.status])];
+  const rows = [["#", "เวลา", "คิว", "ชื่อลูกค้า", "เวลารับ", "รายการ", "หมายเหตุ", "ชำระ", "ยอด (บาท)", "สถานะ"],
+    ...d.list.map((o, i) => [i + 1, hhmm(o.createdAt), Number(o.queueNo) || o.queueNo, o.customerName || "", o.pickupTime || "", plainItems(o), o.note || "", PAY_LABEL[o.payment] || o.payment, Number(o.total) || 0, STATUS_LABEL[o.status] || o.status])];
   const ws1 = X.utils.aoa_to_sheet(summary); ws1["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 12 }];
-  const ws2 = X.utils.aoa_to_sheet(rows); ws2["!cols"] = [{ wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 60 }, { wch: 9 }, { wch: 10 }, { wch: 10 }];
+  const ws2 = X.utils.aoa_to_sheet(rows); ws2["!cols"] = [{ wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 16 }, { wch: 8 }, { wch: 55 }, { wch: 30 }, { wch: 9 }, { wch: 10 }, { wch: 10 }];
   const wb = X.utils.book_new();
   X.utils.book_append_sheet(wb, ws1, "สรุป"); X.utils.book_append_sheet(wb, ws2, "ออเดอร์");
   X.writeFile(wb, `MA-LO-KO_ยอดขาย_${d.day}.xlsx`);
 }
 
+function custInfo(o, withNote = true) {   // ชื่อ · เวลารับ · หมายเหตุ (สำหรับรายการ/ยอดขาย)
+  const parts = [];
+  if (o.customerName) parts.push(`<b>${esc(o.customerName)}</b>`);
+  if (o.pickupTime) parts.push(`รับ ${esc(o.pickupTime)} น.`);
+  if (withNote && o.note) parts.push(`หมายเหตุ: ${esc(o.note)}`);
+  return parts.join(" · ");
+}
 function itemsText(o) {
   return (o.items || []).map(it => `${esc(it.name)}×${esc(it.qty)}${(it.opts || []).filter(x => !DEFAULT_OPTS.has(x)).map(x => ` (${esc(x)})`).join("")}${(it.adds || []).map(a => ` +${esc(a.name)}${a.qty > 1 ? "×" + esc(a.qty) : ""}`).join("")}`).join(", ");
 }
@@ -730,7 +751,11 @@ function renderCart() {
   const customOn = received != null && received !== total && !shownNotes.includes(received);
   let confirmLabel = `ยืนยันออเดอร์ · ${baht(total)}`;
   if (payment === "promptpay" && SHOP.promptpay) confirmLabel = `แสดง QR · ${baht(total)}`;
+  const hasCust = cust.name || cust.pickup || cust.note;
   $("#cartFoot").innerHTML = `
+    <button class="custbtn ${hasCust ? "set" : ""}" data-act="cust">${hasCust
+      ? `แก้ข้อมูลลูกค้า<small>${[cust.name && "ชื่อ: " + esc(cust.name), cust.pickup && "รับ " + esc(cust.pickup) + " น.", cust.note && "หมายเหตุ: " + esc(cust.note)].filter(Boolean).join(" · ")}</small>`
+      : "+ ชื่อลูกค้า / เวลารับ / หมายเหตุ"}</button>
     <div class="total"><span>รวม</span><b>${baht(total)}</b></div>
     <div class="seg">
       <button class="${payment === "cash" ? "on" : ""}" data-act="pay" data-id="cash">เงินสด</button>
@@ -764,15 +789,30 @@ function placeOrder() {
     day: curDay, queueNo, total, payment,
     cashReceived: payment === "cash" ? received : null,
     items: cart.map(l => ({ menuId: l.menuId, name: l.name, price: l.price, qty: l.qty, opts: l.opts, adds: l.adds })),
-    status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null
+    status: "pending", createdAt: Date.now(), doneAt: null, pickedAt: null, cancelledAt: null,
+    customerName: cust.name || null, pickupTime: cust.pickup || null, note: cust.note || null
   };
   store.add(order).catch(e => toast("บันทึกออเดอร์คิว #" + queueNo + " ไม่สำเร็จ — " + (e && e.code === "quota_exceeded" ? "ฐานข้อมูลเต็ม" : "ตรวจอินเทอร์เน็ต")));
   const ch = order.cashReceived != null ? ` · รับ ${baht(order.cashReceived)} ทอน ${baht(order.cashReceived - total)}` : "";
-  cart = []; received = null; payment = "cash";
-  openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า</div><div class="n">${queueNo}</div>
+  cart = []; received = null; payment = "cash"; cust = { name: "", pickup: "", note: "" };
+  openModal("done", `<div class="bigq"><div class="muted">เลขคิวของลูกค้า${order.customerName ? " · " + esc(order.customerName) : ""}</div><div class="n">${queueNo}</div>
     <p style="margin:8px 0 0">${baht(total)} · ${PAY_LABEL[order.payment]}${ch}</p></div>
     <button class="btn primary big" data-act="close">ออเดอร์ถัดไป</button>`);
   update();
+}
+
+/* ---------- ข้อมูลลูกค้า (ชื่อ / เวลารับ / หมายเหตุ) ---------- */
+function openCust() {
+  openModal("cust", `<h3>ข้อมูลลูกค้า</h3>
+    <div class="field"><label for="cName">ชื่อลูกค้า</label><input class="input" id="cName" maxlength="40" placeholder="เช่น น้องมายด์" value="${esc(cust.name)}"></div>
+    <div class="field"><label for="cTime">เวลารับ</label><input class="input" id="cTime" type="time" value="${esc(cust.pickup)}"></div>
+    <div class="field"><label for="cNote">หมายเหตุ</label><textarea class="input" id="cNote" maxlength="200" placeholder="เช่น แยกแก้ว, แก้วที่ 2 ไม่หวาน">${esc(cust.note)}</textarea></div>
+    <p class="muted" style="margin:0;font-size:13px">ไม่บังคับ เว้นว่างได้ทุกช่อง</p>
+    <div class="row"><button class="btn ghost" data-act="custclear">ล้าง</button><button class="btn primary" data-act="custsave">บันทึก</button></div>`);
+}
+function saveCust() {
+  cust = { name: $("#cName").value.trim(), pickup: $("#cTime").value, note: $("#cNote").value.trim() };
+  closeModal(); update();
 }
 
 /* ---------- แป้นกรอกเงินเอง ---------- */
@@ -848,7 +888,7 @@ function renderRecent() {
     <div class="olist">${list.length ? list.map(o => `
       <div class="orow ${o.status === "cancelled" ? "cx" : ""}">
         <div class="q">#${esc(o.queueNo)}</div>
-        <div><div class="its">${itemsText(o)}</div><div class="muted" style="font-size:13px">${hhmm(o.createdAt)} · ${baht(o.total)} · ${esc(PAY_LABEL[o.payment] || "")} <span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></div></div>
+        <div><div class="its">${itemsText(o)}</div>${custInfo(o) ? `<div class="cinfo">${custInfo(o)}</div>` : ""}<div class="muted" style="font-size:13px">${hhmm(o.createdAt)} · ${baht(o.total)} · ${esc(PAY_LABEL[o.payment] || "")} <span class="st ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span></div></div>
         <div>${o.status !== "cancelled" ? `<button class="btn" style="color:var(--danger)" data-act="cancel" data-id="${esc(o.id)}">ยกเลิก</button>` : ""}</div>
       </div>`).join("") : `<p class="muted">ยังไม่มีออเดอร์</p>`}</div>`;
 }
@@ -919,7 +959,10 @@ document.addEventListener("click", e => {
     case "dec": changeQty(id, -1); break;
     case "pay": payment = id; received = null; update(); break;
     case "cash": received = id === "exact" ? cartTotal() : Number(id); update(); break;
-    case "clearcart": cart = []; received = null; update(); break;
+    case "clearcart": cart = []; received = null; cust = { name: "", pickup: "", note: "" }; update(); break;
+    case "cust": openCust(); break;
+    case "custsave": saveCust(); break;
+    case "custclear": cust = { name: "", pickup: "", note: "" }; closeModal(); update(); break;
     case "custom": openKeypad(); break;
     case "kp": keypadPress(id); break;
     case "kpok": keypadOk(); break;
